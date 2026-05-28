@@ -1,0 +1,46 @@
+#!/bin/bash
+# Pre-commit hook: code quality checks
+# ALL checks MUST pass. Zero tolerance for failures.
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Format check
+echo "  clang-format..."
+UNFORMATTED=$(find src tests -name '*.cpp' -o -name '*.hpp' | xargs clang-format --dry-run --Werror 2>&1 || true)
+if [ -n "$UNFORMATTED" ]; then
+    echo "$UNFORMATTED" | head -20
+    echo "❌ Run 'make fmt'"
+    exit 1
+fi
+
+# 2. Compile (zero warnings = errors)
+echo "  compile..."
+make -s all || { echo "❌ Compilation failed"; exit 1; }
+
+# 3. File length: max 240 CODE lines
+echo "  file length..."
+MAX_CODE_LINES=240
+VIOLATIONS=""
+for f in $(find src tests -name '*.cpp' -o -name '*.hpp' 2>/dev/null); do
+    CODE_LINES=$(sed 's/[[:space:]]*$//' "$f" \
+        | grep -v '^\s*$' \
+        | grep -v '^\s*//' \
+        | grep -v '^\s*\*' \
+        | grep -v '^\s*/\*' \
+        | grep -v '^\s*\*/' \
+        | wc -l | tr -d ' ')
+    if [ "$CODE_LINES" -gt "$MAX_CODE_LINES" ]; then
+        VIOLATIONS="$VIOLATIONS\n  $f: $CODE_LINES code lines (max $MAX_CODE_LINES)"
+    fi
+done
+if [ -n "$VIOLATIONS" ]; then
+    echo -e "❌ Files exceed $MAX_CODE_LINES code lines:$VIOLATIONS"
+    exit 1
+fi
+
+# 4. Tests
+echo "  tests..."
+make -s test || { echo "❌ Tests failed"; exit 1; }
+
+echo "✅ All checks passed"

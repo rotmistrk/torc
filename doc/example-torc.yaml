@@ -1,0 +1,22 @@
+# torc.yaml — example manifest
+depdir: ~/.local/share/torc
+parallel: 4
+
+packages:
+  - name: fmt
+    version: 10.1.1
+    source: https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz
+    sha256: 78b8c0a72b1c35e4443a7e308df10571c90e3c7f5579433f57f8eb59f4b98b30
+    build: |
+      cmake -B build -DCMAKE_INSTALL_PREFIX=${PREFIX} -DFMT_TEST=OFF
+      cmake --build build -j${JOBS}
+      cmake --install build
+
+  - name: spdlog
+    version: 1.12.0
+    source: https://github.com/gabime/spdlog/archive/v1.12.0.tar.gz
+    sha256: 4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f1e6f0e4e8b4b2f3c5e7a1
+    build: |
+      cmake -B build -DCMAKE_INSTALL_PREFIX=${PREFIX} -DSPDLOG_FMT_EXTERNAL=ON
+      cmake --build build -j${JOBS}
+      cmake --install build
