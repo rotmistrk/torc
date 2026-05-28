@@ -3,8 +3,10 @@
 #include "diag.hpp"
 #include "exitcodes.hpp"
 #include "generate.hpp"
+#include "hook.hpp"
 #include "install.hpp"
 #include "manifest.hpp"
+#include "scaffold.hpp"
 
 #include <string>
 
@@ -59,6 +61,37 @@ static int do_list(int /*argc*/, char** /*argv*/) {
     return EX_OK;
 }
 
+static int do_new(int argc, char** argv) {
+    NewOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--lib") opts.lib = true;
+        else if (arg == "--no-git") opts.no_git = true;
+        else if (arg[0] != '-') opts.name = arg;
+    }
+    return cmd_new(opts);
+}
+
+static int do_init(int argc, char** argv) {
+    InitOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--force") opts.force = true;
+        else if (arg.rfind("--dir=", 0) == 0) opts.dir = arg.substr(6);
+        else if (arg.rfind("--name=", 0) == 0) opts.name = arg.substr(7);
+    }
+    return cmd_init(opts);
+}
+
+static int do_hook(int argc, char** argv) {
+    HookOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.rfind("--makefile=", 0) == 0) opts.makefile = arg.substr(11);
+    }
+    return cmd_hook(opts);
+}
+
 int main(int argc, char** argv) {
     cli::Parser parser;
 
@@ -74,6 +107,9 @@ int main(int argc, char** argv) {
     parser.add_command({"generate", "Emit extdep.mak",                do_generate});
     parser.add_command({"clean",    "Remove stale versions",          do_clean});
     parser.add_command({"list",     "List declared packages",         do_list});
+    parser.add_command({"new",      "Create a new project",           do_new});
+    parser.add_command({"init",     "Generate a Makefile",            do_init});
+    parser.add_command({"hook",     "Inject torc into Makefile",      do_hook});
 
     return parser.parse_and_dispatch(argc, argv);
 }

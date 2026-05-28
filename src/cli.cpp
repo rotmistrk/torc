@@ -19,7 +19,7 @@ void Parser::add_command(Command cmd) {
 }
 
 std::string Parser::build_short_opts() const {
-    std::string s;
+    std::string s = "+"; // POSIX: stop at first non-option
     for (const auto& o : options_) {
         if (o.short_name != '\0') {
             s += o.short_name;

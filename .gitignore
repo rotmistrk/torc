@@ -3,3 +3,4 @@ build/
 *.d
 extdep.mak
 localdep.mak
+.kairn*
