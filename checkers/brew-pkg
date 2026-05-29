@@ -1,0 +1,39 @@
+#!/bin/sh
+# torc checker: Homebrew package versions
+# Handles "brew:<formula>" source convention.
+#
+# Usage:
+#   brew-pkg --can-check <url>   → exit 0 if brew-style source
+#   brew-pkg --latest <url>      → print latest available version
+
+set -e
+
+case "$1" in
+    --can-check)
+        echo "$2" | grep -qE '^brew:' && exit 0
+        echo "$2" | grep -qE 'homebrew' && exit 0
+        exit 1
+        ;;
+    --latest)
+        PKG=$(echo "$2" | sed -n 's|^brew:\(.*\)|\1|p')
+        if [ -z "$PKG" ]; then
+            PKG=$(echo "$2" | grep -oE '[a-z][a-z0-9@_+-]+' | tail -1)
+        fi
+        if [ -z "$PKG" ]; then exit 1; fi
+        # Query Homebrew API (works without brew installed)
+        VERSION=$(curl -fsSL "https://formulae.brew.sh/api/formula/${PKG}.json" 2>/dev/null \
+            | grep -o '"stable":"[^"]*"' | head -1 | sed 's/.*"stable":"\([^"]*\)".*/\1/')
+        if [ -z "$VERSION" ]; then
+            # Fallback: use brew info if installed
+            VERSION=$(brew info --json=v2 "$PKG" 2>/dev/null \
+                | grep -o '"stable":{"version":"[^"]*"' | head -1 \
+                | sed 's/.*"version":"\([^"]*\)".*/\1/')
+        fi
+        if [ -z "$VERSION" ]; then exit 1; fi
+        echo "$VERSION"
+        ;;
+    *)
+        echo "Usage: $0 --can-check <url> | --latest <url>" >&2
+        exit 1
+        ;;
+esac

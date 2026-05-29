@@ -1,0 +1,40 @@
+#!/bin/sh
+# torc checker: APT (Debian/Ubuntu) package versions
+# Handles URLs containing "debian.org", "ubuntu.com", or packages with
+# source URLs matching "apt:<package-name>" convention.
+#
+# Usage:
+#   apt-pkg --can-check <url>   → exit 0 if apt-style source
+#   apt-pkg --latest <url>      → print latest available version
+
+set -e
+
+extract_pkg_name() {
+    # Support "apt:libfmt-dev" or URLs with package name in path
+    echo "$1" | sed -n 's|^apt:\(.*\)|\1|p'
+}
+
+case "$1" in
+    --can-check)
+        echo "$2" | grep -qE '^apt:' && exit 0
+        echo "$2" | grep -qE '(debian\.org|ubuntu\.com|launchpad\.net)' && exit 0
+        exit 1
+        ;;
+    --latest)
+        PKG=$(extract_pkg_name "$2")
+        if [ -z "$PKG" ]; then
+            # Try to extract from URL path (last component before version)
+            PKG=$(echo "$2" | grep -oE '[a-z][a-z0-9.+-]+' | tail -1)
+        fi
+        if [ -z "$PKG" ]; then exit 1; fi
+        # Query apt-cache for candidate version
+        VERSION=$(apt-cache policy "$PKG" 2>/dev/null | grep 'Candidate:' | awk '{print $2}')
+        if [ -z "$VERSION" ] || [ "$VERSION" = "(none)" ]; then exit 1; fi
+        # Strip epoch and debian revision for clean semver
+        echo "$VERSION" | sed 's/^[0-9]*://; s/-[^-]*$//'
+        ;;
+    *)
+        echo "Usage: $0 --can-check <url> | --latest <url>" >&2
+        exit 1
+        ;;
+esac
