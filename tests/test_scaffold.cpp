@@ -29,8 +29,8 @@ static void test_new_basic() {
     fs::remove_all(dir);
 
     torc::NewOpts opts;
-    opts.name = dir;
-    opts.no_git = true;
+    opts.set_name(dir);
+    opts.set_no_git(true);
     int rc = torc::cmd_new(opts);
     ASSERT(rc == 0);
     ASSERT(fs::exists(dir + "/torc.yaml"));
@@ -47,9 +47,9 @@ static void test_new_lib() {
     fs::remove_all(dir);
 
     torc::NewOpts opts;
-    opts.name = dir;
-    opts.lib = true;
-    opts.no_git = true;
+    opts.set_name(dir);
+    opts.set_lib(true);
+    opts.set_no_git(true);
     int rc = torc::cmd_new(opts);
     ASSERT(rc == 0);
     ASSERT(!fs::exists(dir + "/src/main.cpp"));
@@ -65,15 +65,13 @@ static void test_init_no_overwrite() {
     fs::remove_all(dir);
     fs::create_directories(dir);
 
-    // Create existing Makefile
     { std::ofstream f(dir + "/Makefile"); f << "existing\n"; }
 
     torc::InitOpts opts;
-    opts.dir = dir;
+    opts.set_dir(dir);
     int rc = torc::cmd_init(opts);
     ASSERT(rc == 73); // EX_CANTCREAT
 
-    // Content unchanged
     ASSERT(read_file(dir + "/Makefile") == "existing\n");
 
     fs::remove_all(dir);
@@ -87,15 +85,14 @@ static void test_init_force() {
     { std::ofstream f(dir + "/Makefile"); f << "old\n"; }
 
     torc::InitOpts opts;
-    opts.dir = dir;
-    opts.force = true;
-    opts.name = "myapp";
+    opts.set_dir(dir);
+    opts.set_force(true);
+    opts.set_name("myapp");
     int rc = torc::cmd_init(opts);
     ASSERT(rc == 0);
 
     auto content = read_file(dir + "/Makefile");
     ASSERT(content.find("myapp") != std::string::npos);
-    // Backup should exist
     bool found_bak = false;
     for (auto& e : fs::directory_iterator(dir)) {
         if (e.path().string().find(".bak") != std::string::npos) {
@@ -117,7 +114,7 @@ static void test_hook_insert() {
     { std::ofstream f(mf); f << "CXX = g++\n\nall:\n\techo hi\n"; }
 
     torc::HookOpts opts;
-    opts.makefile = mf;
+    opts.set_makefile(mf);
     int rc = torc::cmd_hook(opts);
     ASSERT(rc == 0);
 
@@ -144,7 +141,7 @@ static void test_hook_replace() {
     }
 
     torc::HookOpts opts;
-    opts.makefile = mf;
+    opts.set_makefile(mf);
     int rc = torc::cmd_hook(opts);
     ASSERT(rc == 0);
 

@@ -5,8 +5,15 @@
 
 namespace torc {
 
-struct HookOpts {
-    std::string makefile = "Makefile";
+class HookOpts {
+  public:
+    HookOpts() = default;
+
+    const std::string& makefile() const { return makefile_; }
+    void set_makefile(std::string v) { makefile_ = std::move(v); }
+
+  private:
+    std::string makefile_ = "Makefile";
 };
 
 int cmd_hook(const HookOpts& opts);

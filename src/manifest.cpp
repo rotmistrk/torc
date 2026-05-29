@@ -32,7 +32,7 @@ static std::string default_depdir() {
 
 Manifest load_manifest(const std::string& path, std::string& err) {
     Manifest m;
-    m.depdir = default_depdir();
+    m.set_depdir(default_depdir());
 
     std::ifstream f(path);
     if (!f) {
@@ -58,12 +58,11 @@ Manifest load_manifest(const std::string& path, std::string& err) {
     }
 
     if (auto* d = root.get("depdir")) {
-        if (d->is_scalar()) m.depdir = expand_path(d->as_scalar());
+        if (d->is_scalar()) m.set_depdir(expand_path(d->as_scalar()));
     }
     if (auto* p = root.get("parallel")) {
         if (p->is_scalar()) {
-            m.parallel = std::atoi(p->as_scalar().c_str());
-            if (m.parallel < 1) m.parallel = 1;
+            m.set_parallel(std::atoi(p->as_scalar().c_str()));
         }
     }
 
@@ -72,15 +71,15 @@ Manifest load_manifest(const std::string& path, std::string& err) {
             for (const auto& item : pkgs->as_list()) {
                 if (!item.is_map()) continue;
                 Package pkg;
-                if (auto* n = item.get("name"))     pkg.name = n->as_scalar();
-                if (auto* v = item.get("version"))  pkg.version = v->as_scalar();
-                if (auto* s = item.get("source"))   pkg.source = s->as_scalar();
-                if (auto* c = item.get("sha256"))   pkg.sha256 = c->as_scalar();
-                if (auto* b = item.get("build"))    pkg.build = b->as_scalar();
-                if (auto* d = item.get("discover")) pkg.discover = d->as_scalar();
-                if (auto* l = item.get("lib"))      pkg.lib_name = l->as_scalar();
-                if (pkg.lib_name.empty()) pkg.lib_name = pkg.name;
-                if (!pkg.name.empty()) m.packages.push_back(std::move(pkg));
+                if (auto* n = item.get("name"))     pkg.set_name(n->as_scalar());
+                if (auto* v = item.get("version"))  pkg.set_version(v->as_scalar());
+                if (auto* s = item.get("source"))   pkg.set_source(s->as_scalar());
+                if (auto* c = item.get("sha256"))   pkg.set_sha256(c->as_scalar());
+                if (auto* b = item.get("build"))    pkg.set_build(b->as_scalar());
+                if (auto* d = item.get("discover")) pkg.set_discover(d->as_scalar());
+                if (auto* l = item.get("lib"))      pkg.set_lib_name(l->as_scalar());
+                if (pkg.lib_name().empty()) pkg.set_lib_name(pkg.name());
+                if (!pkg.name().empty()) m.add_package(std::move(pkg));
             }
         }
     }

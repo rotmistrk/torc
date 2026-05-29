@@ -22,8 +22,8 @@ std::vector<TaskResult> run_parallel(
                 if (next_task >= tasks.size()) return;
                 idx = next_task++;
             }
-            results[idx].name = tasks[idx].first;
-            results[idx].exit_code = tasks[idx].second();
+            results[idx].set_name(tasks[idx].first);
+            results[idx].set_exit_code(tasks[idx].second());
         }
     };
 

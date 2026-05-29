@@ -140,53 +140,53 @@ static std::string timestamp_suffix() {
 }
 
 int cmd_new(const NewOpts& opts) {
-    if (opts.name.empty()) {
+    if (opts.name().empty()) {
         diag::error("new", "project name required");
         return EX_USAGE;
     }
 
-    if (fs::exists(opts.name)) {
-        diag::error("new", "directory already exists: " + opts.name);
+    if (fs::exists(opts.name())) {
+        diag::error("new", "directory already exists: " + opts.name());
         return EX_CANTCREAT;
     }
 
-    std::string base = fs::path(opts.name).filename().string();
+    std::string base = fs::path(opts.name()).filename().string();
     std::error_code ec;
-    fs::create_directories(opts.name + "/src", ec);
-    fs::create_directories(opts.name + "/tests", ec);
-    fs::create_directories(opts.name + "/include/" + base, ec);
+    fs::create_directories(opts.name() + "/src", ec);
+    fs::create_directories(opts.name() + "/tests", ec);
+    fs::create_directories(opts.name() + "/include/" + base, ec);
 
-    write_file(opts.name + "/torc.yaml", torc_yaml_content());
-    write_file(opts.name + "/Makefile", makefile_content(base));
-    write_file(opts.name + "/.gitignore", gitignore_content());
-    write_file(opts.name + "/.clang-format", clang_format_content());
+    write_file(opts.name() + "/torc.yaml", torc_yaml_content());
+    write_file(opts.name() + "/Makefile", makefile_content(base));
+    write_file(opts.name() + "/.gitignore", gitignore_content());
+    write_file(opts.name() + "/.clang-format", clang_format_content());
 
-    if (opts.lib) {
-        write_file(opts.name + "/src/" + base + ".cpp", lib_cpp_content(base));
-        write_file(opts.name + "/include/" + base + "/" + base + ".hpp",
+    if (opts.lib()) {
+        write_file(opts.name() + "/src/" + base + ".cpp", lib_cpp_content(base));
+        write_file(opts.name() + "/include/" + base + "/" + base + ".hpp",
                    lib_hpp_content(base));
     } else {
-        write_file(opts.name + "/src/main.cpp", main_cpp_content(base));
+        write_file(opts.name() + "/src/main.cpp", main_cpp_content(base));
     }
 
-    write_file(opts.name + "/tests/test_main.cpp", test_main_content());
+    write_file(opts.name() + "/tests/test_main.cpp", test_main_content());
 
-    if (!opts.no_git) {
-        std::string cmd = "cd '" + opts.name + "' && git init -q";
+    if (!opts.no_git()) {
+        std::string cmd = "cd '" + opts.name() + "' && git init -q";
         int rc = std::system(cmd.c_str());
         if (rc != 0) diag::error("new", "git init failed");
     }
 
-    diag::info("created project: " + opts.name);
+    diag::info("created project: " + opts.name());
     return EX_OK;
 }
 
 int cmd_init(const InitOpts& opts) {
-    std::string dir = opts.dir;
+    std::string dir = opts.dir();
     std::string mf = dir + "/Makefile";
 
     if (fs::exists(mf)) {
-        if (!opts.force) {
+        if (!opts.force()) {
             diag::error("init", "Makefile already exists (use --force to overwrite)");
             return EX_CANTCREAT;
         }
@@ -200,7 +200,7 @@ int cmd_init(const InitOpts& opts) {
         diag::info("backed up Makefile → " + backup);
     }
 
-    std::string name = opts.name;
+    std::string name = opts.name();
     if (name.empty()) {
         name = fs::path(fs::absolute(dir)).filename().string();
     }

@@ -10,12 +10,12 @@ namespace fs = std::filesystem;
 
 std::vector<StaleEntry> find_stale(const Manifest& m) {
     std::vector<StaleEntry> stale;
-    std::string depdir = expand_path(m.depdir);
+    std::string depdir = expand_path(m.depdir());
 
     // Build set of expected: "name/version"
     std::set<std::string> expected;
-    for (const auto& pkg : m.packages) {
-        expected.insert(pkg.name + "/" + pkg.version);
+    for (const auto& pkg : m.packages()) {
+        expected.insert(pkg.name() + "/" + pkg.version());
     }
 
     std::error_code ec;
@@ -32,7 +32,7 @@ std::vector<StaleEntry> find_stale(const Manifest& m) {
             auto key = pkg_name + "/" + ver_name;
 
             if (expected.find(key) == expected.end()) {
-                stale.push_back({ver_entry.path().string(), pkg_name, ver_name});
+                stale.emplace_back(ver_entry.path().string(), pkg_name, ver_name);
             }
         }
     }
@@ -44,12 +44,12 @@ int clean_stale(const std::vector<StaleEntry>& entries, bool dry_run) {
     int count = 0;
     for (const auto& e : entries) {
         if (dry_run) {
-            diag::info("would remove: " + e.path);
+            diag::info("would remove: " + e.path());
         } else {
             std::error_code ec;
-            fs::remove_all(e.path, ec);
+            fs::remove_all(e.path(), ec);
             if (ec) {
-                diag::error("clean", "failed to remove " + e.path + ": " + ec.message());
+                diag::error("clean", "failed to remove " + e.path() + ": " + ec.message());
             } else {
                 ++count;
             }

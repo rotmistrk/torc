@@ -1,3 +1,4 @@
+#include "build.hpp"
 #include "clean.hpp"
 #include "cli.hpp"
 #include "diag.hpp"
@@ -54,9 +55,9 @@ static int do_clean(int /*argc*/, char** /*argv*/) {
 
 static int do_list(int /*argc*/, char** /*argv*/) {
     auto m = load_or_die();
-    for (const auto& pkg : m.packages) {
+    for (const auto& pkg : m.packages()) {
         std::fprintf(stdout, "%-20s %s\n",
-                     pkg.name.c_str(), pkg.version.c_str());
+                     pkg.name().c_str(), pkg.version().c_str());
     }
     return EX_OK;
 }
@@ -65,9 +66,9 @@ static int do_new(int argc, char** argv) {
     NewOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--lib") opts.lib = true;
-        else if (arg == "--no-git") opts.no_git = true;
-        else if (arg[0] != '-') opts.name = arg;
+        if (arg == "--lib") opts.set_lib(true);
+        else if (arg == "--no-git") opts.set_no_git(true);
+        else if (arg[0] != '-') opts.set_name(arg);
     }
     return cmd_new(opts);
 }
@@ -76,9 +77,9 @@ static int do_init(int argc, char** argv) {
     InitOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--force") opts.force = true;
-        else if (arg.rfind("--dir=", 0) == 0) opts.dir = arg.substr(6);
-        else if (arg.rfind("--name=", 0) == 0) opts.name = arg.substr(7);
+        if (arg == "--force") opts.set_force(true);
+        else if (arg.rfind("--dir=", 0) == 0) opts.set_dir(arg.substr(6));
+        else if (arg.rfind("--name=", 0) == 0) opts.set_name(arg.substr(7));
     }
     return cmd_init(opts);
 }
@@ -87,9 +88,24 @@ static int do_hook(int argc, char** argv) {
     HookOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg.rfind("--makefile=", 0) == 0) opts.makefile = arg.substr(11);
+        if (arg.rfind("--makefile=", 0) == 0) opts.set_makefile(arg.substr(11));
     }
     return cmd_hook(opts);
+}
+
+static int do_build(int argc, char** argv) {
+    auto m = load_or_die();
+    BuildOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.rfind("--src=", 0) == 0) opts.set_src_dir(arg.substr(6));
+        else if (arg.rfind("--out=", 0) == 0) opts.set_out_dir(arg.substr(6));
+        else if (arg.rfind("--target=", 0) == 0) opts.set_target(arg.substr(9));
+        else if (arg.rfind("--std=", 0) == 0) opts.set_std_ver(arg.substr(6));
+        else if (arg == "--release") opts.set_release(true);
+        else if (arg == "--recursive") opts.set_recursive(true);
+    }
+    return cmd_build(m, opts);
 }
 
 int main(int argc, char** argv) {
@@ -105,6 +121,7 @@ int main(int argc, char** argv) {
 
     parser.add_command({"install",  "Fetch, build, install packages", do_install});
     parser.add_command({"generate", "Emit extdep.mak",                do_generate});
+    parser.add_command({"build",    "Compile sources directly",       do_build});
     parser.add_command({"clean",    "Remove stale versions",          do_clean});
     parser.add_command({"list",     "List declared packages",         do_list});
     parser.add_command({"new",      "Create a new project",           do_new});

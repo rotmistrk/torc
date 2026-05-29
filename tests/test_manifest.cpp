@@ -25,12 +25,12 @@ static void test_load_basic() {
     std::string err;
     auto m = torc::load_manifest(tmp.string(), err);
     assert(err.empty());
-    assert(m.depdir == "/tmp/torc-test");
-    assert(m.parallel == 2);
-    assert(m.packages.size() == 1);
-    assert(m.packages[0].name == "fmt");
-    assert(m.packages[0].version == "10.1.1");
-    assert(m.packages[0].sha256 == "abc123");
+    assert(m.depdir() == "/tmp/torc-test");
+    assert(m.parallel() == 2);
+    assert(m.packages().size() == 1);
+    assert(m.packages()[0].name() == "fmt");
+    assert(m.packages()[0].version() == "10.1.1");
+    assert(m.packages()[0].sha256() == "abc123");
 
     fs::remove(tmp);
 }

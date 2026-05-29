@@ -6,20 +6,59 @@
 
 namespace torc {
 
-struct Package {
-    std::string name;
-    std::string version;
-    std::string source;       // URL
-    std::string sha256;       // hex-encoded checksum
-    std::string build;        // shell commands to build
-    std::string discover;     // optional: plugin for transitive deps
-    std::string lib_name;     // override for -l flag (default: name)
+class Package {
+  public:
+    Package() = default;
+    Package(std::string name, std::string version, std::string source,
+            std::string sha256, std::string build, std::string discover,
+            std::string lib_name)
+        : name_(std::move(name)), version_(std::move(version)),
+          source_(std::move(source)), sha256_(std::move(sha256)),
+          build_(std::move(build)), discover_(std::move(discover)),
+          lib_name_(std::move(lib_name)) {}
+
+    const std::string& name() const { return name_; }
+    const std::string& version() const { return version_; }
+    const std::string& source() const { return source_; }
+    const std::string& sha256() const { return sha256_; }
+    const std::string& build() const { return build_; }
+    const std::string& discover() const { return discover_; }
+    const std::string& lib_name() const { return lib_name_; }
+
+    void set_name(std::string v) { name_ = std::move(v); }
+    void set_version(std::string v) { version_ = std::move(v); }
+    void set_source(std::string v) { source_ = std::move(v); }
+    void set_sha256(std::string v) { sha256_ = std::move(v); }
+    void set_build(std::string v) { build_ = std::move(v); }
+    void set_discover(std::string v) { discover_ = std::move(v); }
+    void set_lib_name(std::string v) { lib_name_ = std::move(v); }
+
+  private:
+    std::string name_;
+    std::string version_;
+    std::string source_;
+    std::string sha256_;
+    std::string build_;
+    std::string discover_;
+    std::string lib_name_;
 };
 
-struct Manifest {
-    std::string depdir;       // where to install (expandable)
-    int parallel = 4;         // max parallel jobs
-    std::vector<Package> packages;
+class Manifest {
+  public:
+    Manifest() = default;
+
+    const std::string& depdir() const { return depdir_; }
+    int parallel() const { return parallel_; }
+    const std::vector<Package>& packages() const { return packages_; }
+
+    void set_depdir(std::string v) { depdir_ = std::move(v); }
+    void set_parallel(int v) { parallel_ = v < 1 ? 1 : v; }
+    void add_package(Package p) { packages_.push_back(std::move(p)); }
+
+  private:
+    std::string depdir_;
+    int parallel_ = 4;
+    std::vector<Package> packages_;
 };
 
 // Parse manifest from file. Returns empty manifest + sets err on failure.

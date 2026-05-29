@@ -24,13 +24,13 @@ static const char* TORC_BLOCK =
 int cmd_hook(const HookOpts& opts) {
     namespace fs = std::filesystem;
 
-    if (!fs::exists(opts.makefile)) {
-        diag::error("hook", "file not found: " + opts.makefile);
+    if (!fs::exists(opts.makefile())) {
+        diag::error("hook", "file not found: " + opts.makefile());
         return EX_NOINPUT;
     }
 
     // Read existing content
-    std::ifstream in(opts.makefile);
+    std::ifstream in(opts.makefile());
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(in, line)) lines.push_back(line);
@@ -44,12 +44,12 @@ int cmd_hook(const HookOpts& opts) {
     }
 
     // Backup
-    std::string bak = opts.makefile + ".bak";
-    fs::copy_file(opts.makefile, bak, fs::copy_options::overwrite_existing);
+    std::string bak = opts.makefile() + ".bak";
+    fs::copy_file(opts.makefile(), bak, fs::copy_options::overwrite_existing);
 
-    std::ofstream out(opts.makefile);
+    std::ofstream out(opts.makefile());
     if (!out) {
-        diag::error("hook", "cannot write: " + opts.makefile);
+        diag::error("hook", "cannot write: " + opts.makefile());
         return EX_IOERR;
     }
 
@@ -85,7 +85,7 @@ int cmd_hook(const HookOpts& opts) {
         }
     }
 
-    diag::info("hooked torc into " + opts.makefile);
+    diag::info("hooked torc into " + opts.makefile());
     return EX_OK;
 }
 

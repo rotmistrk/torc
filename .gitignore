@@ -4,3 +4,4 @@ build/
 extdep.mak
 localdep.mak
 .kairn*
+.kiro/agents/kairn.json
