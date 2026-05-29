@@ -1,6 +1,7 @@
 #include "build.hpp"
 #include "clean.hpp"
 #include "cli.hpp"
+#include "compdb.hpp"
 #include "diag.hpp"
 #include "exitcodes.hpp"
 #include "generate.hpp"
@@ -119,6 +120,22 @@ static int do_build(int argc, char** argv) {
     return cmd_build(load_or_die(), parse_build_opts(argc, argv));
 }
 
+static CompdbOpts parse_compdb_opts(int argc, char** argv) {
+    CompdbOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.rfind("--src=", 0) == 0) { opts.set_src_dir(arg.substr(6)); continue; }
+        if (arg.rfind("--out=", 0) == 0) { opts.set_out_dir(arg.substr(6)); continue; }
+        if (arg.rfind("--std=", 0) == 0) { opts.set_std_ver(arg.substr(6)); continue; }
+        if (arg == "--recursive") opts.set_recursive(true);
+    }
+    return opts;
+}
+
+static int do_compdb(int argc, char** argv) {
+    return cmd_compdb(load_or_die(), parse_compdb_opts(argc, argv));
+}
+
 int main(int argc, char** argv) {
     Parser parser;
 
@@ -133,6 +150,7 @@ int main(int argc, char** argv) {
     parser.add_command({"install",  "Fetch, build, install packages", do_install});
     parser.add_command({"generate", "Emit extdep.mak",                do_generate});
     parser.add_command({"build",    "Compile sources directly",       do_build});
+    parser.add_command({"compdb",   "Generate compile_commands.json", do_compdb});
     parser.add_command({"clean",    "Remove stale versions",          do_clean});
     parser.add_command({"list",     "List declared packages",         do_list});
     parser.add_command({"new",      "Create a new project",           do_new});

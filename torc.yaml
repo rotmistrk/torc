@@ -1,0 +1,4 @@
+depdir: ~/.local/share/torc
+parallel: 4
+
+packages: []

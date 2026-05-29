@@ -3,5 +3,6 @@ build/
 *.d
 extdep.mak
 localdep.mak
+compile_commands.json
 .kairn*
 .kiro/agents/kairn.json
