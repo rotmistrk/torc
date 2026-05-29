@@ -96,6 +96,20 @@ Manifest load_manifest(const std::string& path, std::string& err) {
         if (libs->is_scalar()) m.set_ldlibs(libs->as_scalar());
     }
 
+    if (auto* tcs = root.get("toolchains")) {
+        if (tcs->is_map()) {
+            for (const auto& [key, val] : tcs->as_map()) {
+                if (!val.is_map()) continue;
+                Toolchain tc;
+                tc.set_name(key);
+                if (auto* cx = val.get("cxx")) tc.set_cxx(cx->as_scalar());
+                if (auto* cf = val.get("cxxflags")) tc.set_cxxflags(cf->as_scalar());
+                if (auto* od = val.get("out")) tc.set_out(od->as_scalar());
+                m.add_toolchain(std::move(tc));
+            }
+        }
+    }
+
     return m;
 }
 

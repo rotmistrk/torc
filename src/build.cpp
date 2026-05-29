@@ -46,10 +46,33 @@ static bool needs_rebuild(const std::string& src, const std::string& obj) {
     return false;
 }
 
+static std::string resolve_cxx(const Manifest& m, const BuildOpts& opts) {
+    if (!opts.cxx().empty()) return opts.cxx();
+    if (!opts.toolchain().empty()) {
+        auto* tc = m.find_toolchain(opts.toolchain());
+        if (tc && !tc->cxx().empty()) return tc->cxx();
+    }
+    if (auto* env = std::getenv("CXX")) return env;
+    return "g++";
+}
+
+static std::string resolve_out_dir(const Manifest& m, const BuildOpts& opts) {
+    if (!opts.toolchain().empty()) {
+        auto* tc = m.find_toolchain(opts.toolchain());
+        if (tc && !tc->out().empty()) return tc->out();
+    }
+    return opts.out_dir();
+}
+
 static std::string build_cxxflags(const Manifest& m, const BuildOpts& opts) {
     std::string flags = "-std=" + opts.std_ver() + " -Wall -Wextra -Werror -pedantic";
     flags += " -I" + opts.src_dir();
     flags += opts.release() ? " -O2 -DNDEBUG" : " -O0 -g";
+    if (!opts.extra_cxxflags().empty()) flags += " " + opts.extra_cxxflags();
+    if (!opts.toolchain().empty()) {
+        auto* tc = m.find_toolchain(opts.toolchain());
+        if (tc && !tc->cxxflags().empty()) flags += " " + tc->cxxflags();
+    }
     std::string depdir = expand_path(m.depdir());
     for (const auto& pkg : m.packages()) {
         std::string inc = depdir + "/" + pkg.name() + "/" + pkg.version() + "/include";
@@ -123,22 +146,22 @@ int cmd_build(const Manifest& m, const BuildOpts& opts) {
         return EX_NOINPUT;
     }
 
-    fs::create_directories(opts.out_dir());
+    std::string cxx = resolve_cxx(m, opts);
+    std::string out_dir = resolve_out_dir(m, opts);
+    std::string cxxflags = build_cxxflags(m, opts);
+
+    fs::create_directories(out_dir);
     if (opts.recursive())
         for (const auto& s : srcs)
-            fs::create_directories(fs::path(obj_path(s, opts.out_dir(), opts.src_dir())).parent_path());
-
-    std::string cxx = "g++";
-    if (auto* env = std::getenv("CXX")) cxx = env;
-    std::string cxxflags = build_cxxflags(m, opts);
+            fs::create_directories(fs::path(obj_path(s, out_dir, opts.src_dir())).parent_path());
     std::string target_name = opts.target().empty()
         ? fs::current_path().filename().string() : opts.target();
-    std::string target_path = opts.out_dir() + "/" + target_name;
+    std::string target_path = out_dir + "/" + target_name;
 
     std::vector<std::pair<std::string, std::string>> to_compile;
     std::vector<std::string> all_objs;
     for (const auto& src : srcs) {
-        auto obj = obj_path(src, opts.out_dir(), opts.src_dir());
+        auto obj = obj_path(src, out_dir, opts.src_dir());
         all_objs.push_back(obj);
         if (needs_rebuild(src, obj)) to_compile.emplace_back(src, obj);
     }

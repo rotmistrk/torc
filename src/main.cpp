@@ -61,13 +61,16 @@ static int cmd_do_generate(int /*argc*/, char** /*argv*/) {
 }
 
 static int cmd_do_build(int argc, char** argv) {
-    std::string src, out, target, std_ver;
+    std::string src, out, target, std_ver, toolchain, cxx, cxxflags;
     bool release = false, recursive = false;
     Parser p("torc build [options]");
     p.option(&src, 's', "src", "DIR", "Source directory (default: src)")
      .option(&out, 'o', "out", "DIR", "Output directory (default: build)")
      .option(&target, 't', "target", "NAME", "Binary name")
      .option(&std_ver, '\0', "std", "STD", "C++ standard (default: c++20)")
+     .option(&toolchain, 'T', "toolchain", "NAME", "Use named toolchain")
+     .option(&cxx, '\0', "cxx", "CMD", "Override compiler")
+     .option(&cxxflags, '\0', "cxxflags", "FLAGS", "Extra compiler flags")
      .flag(&release, 'r', "release", "Optimize (-O2 -DNDEBUG)")
      .flag(&recursive, 'R', "recursive", "Recurse into subdirectories");
     int rc = p.parse(argc, argv);
@@ -78,6 +81,9 @@ static int cmd_do_build(int argc, char** argv) {
     if (!out.empty()) opts.set_out_dir(out);
     if (!target.empty()) opts.set_target(target);
     if (!std_ver.empty()) opts.set_std_ver(std_ver);
+    if (!toolchain.empty()) opts.set_toolchain(toolchain);
+    if (!cxx.empty()) opts.set_cxx(cxx);
+    if (!cxxflags.empty()) opts.set_extra_cxxflags(cxxflags);
     opts.set_release(release);
     opts.set_recursive(recursive);
     return cmd_build(load_or_die(), opts);
