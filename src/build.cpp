@@ -77,7 +77,8 @@ static std::string build_libs(const Manifest& m) {
 static int compile_sources(
     const std::vector<std::pair<std::string, std::string>>& to_compile,
     const std::string& cxx, const std::string& cxxflags, int parallel) {
-    diag::info("compiling " + std::to_string(to_compile.size()) + " file(s)");
+    int total = static_cast<int>(to_compile.size());
+    diag::info("compiling " + std::to_string(total) + " file(s)");
     std::vector<std::pair<std::string, std::function<int()>>> tasks;
     for (const auto& [src, obj] : to_compile) {
         std::string cmd = cxx + " " + cxxflags + " -MMD -MP -c -o " + obj + " " + src;
@@ -85,9 +86,13 @@ static int compile_sources(
     }
     int fail_rc = EX_OK;
     std::string fail_name;
+    int done = 0;
     run_parallel(tasks, parallel, [&](const std::string& name, int rc) {
+        ++done;
+        diag::progress("compiling", done, total);
         if (rc != 0 && fail_rc == EX_OK) { fail_rc = EX_IOERR; fail_name = name; }
     });
+    diag::progress_done("compiling");
     if (fail_rc != EX_OK) diag::error("build", "compilation failed: " + fail_name);
     return fail_rc;
 }
