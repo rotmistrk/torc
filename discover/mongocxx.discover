@@ -1,0 +1,44 @@
+#!/bin/sh
+# Discover: mongocxx depends on mongoc, bson, openssl, zlib, snappy, zstd
+cat <<EOF
+- name: mongo-c-driver
+  version: 1.26.0
+  source: https://github.com/mongodb/mongo-c-driver/archive/refs/tags/1.26.0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DENABLE_TESTS=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: openssl
+  version: 3.2.1
+  source: https://github.com/openssl/openssl/archive/refs/tags/openssl-3.2.1.tar.gz
+  sha256: ""
+  build: |
+    ./Configure --prefix=\${PREFIX} --openssldir=\${PREFIX}/ssl
+    make -j\${JOBS}
+    make install_sw
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: snappy
+  version: 1.1.10
+  source: https://github.com/google/snappy/archive/refs/tags/1.1.10.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DSNAPPY_BUILD_TESTS=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: zstd
+  version: 1.5.5
+  source: https://github.com/facebook/zstd/archive/refs/tags/v1.5.5.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build/cmake -S build/cmake -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build/cmake -j\${JOBS}
+    cmake --install build/cmake
+EOF

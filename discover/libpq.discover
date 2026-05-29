@@ -1,0 +1,20 @@
+#!/bin/sh
+# Discover: libpq (PostgreSQL client) depends on openssl, zlib
+cat <<EOF
+- name: openssl
+  version: 3.2.1
+  source: https://github.com/openssl/openssl/archive/refs/tags/openssl-3.2.1.tar.gz
+  sha256: ""
+  build: |
+    ./Configure --prefix=\${PREFIX} --openssldir=\${PREFIX}/ssl
+    make -j\${JOBS}
+    make install_sw
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+EOF

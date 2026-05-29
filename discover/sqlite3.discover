@@ -1,0 +1,4 @@
+#!/bin/sh
+# Discover: SQLite3 (leaf dependency, no transitive deps)
+cat <<EOF
+EOF

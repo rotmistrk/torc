@@ -1,0 +1,76 @@
+#!/bin/sh
+# Discover: Folly depends on fmt, glog, gflags, double-conversion, boost, openssl, zlib, lz4, zstd
+cat <<EOF
+- name: fmt
+  version: 10.2.1
+  source: https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DFMT_TEST=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: glog
+  version: 0.7.0
+  source: https://github.com/google/glog/archive/refs/tags/v0.7.0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DBUILD_TESTING=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: gflags
+  version: 2.2.2
+  source: https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: double-conversion
+  version: 3.3.0
+  source: https://github.com/google/double-conversion/archive/refs/tags/v3.3.0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DBUILD_TESTING=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: boost
+  version: 1.84.0
+  source: https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0-cmake.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: openssl
+  version: 3.2.1
+  source: https://github.com/openssl/openssl/archive/refs/tags/openssl-3.2.1.tar.gz
+  sha256: ""
+  build: |
+    ./Configure --prefix=\${PREFIX} --openssldir=\${PREFIX}/ssl
+    make -j\${JOBS}
+    make install_sw
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: lz4
+  version: 1.9.4
+  source: https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build/cmake -S build/cmake -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build/cmake -j\${JOBS}
+    cmake --install build/cmake
+- name: zstd
+  version: 1.5.5
+  source: https://github.com/facebook/zstd/archive/refs/tags/v1.5.5.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build/cmake -S build/cmake -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build/cmake -j\${JOBS}
+    cmake --install build/cmake
+EOF

@@ -1,0 +1,52 @@
+#!/bin/sh
+# Discover: Apache Arrow/Parquet depends on zlib, zstd, lz4, snappy, protobuf, thrift
+cat <<EOF
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: zstd
+  version: 1.5.5
+  source: https://github.com/facebook/zstd/archive/refs/tags/v1.5.5.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build/cmake -S build/cmake -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build/cmake -j\${JOBS}
+    cmake --install build/cmake
+- name: lz4
+  version: 1.9.4
+  source: https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build/cmake -S build/cmake -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build/cmake -j\${JOBS}
+    cmake --install build/cmake
+- name: snappy
+  version: 1.1.10
+  source: https://github.com/google/snappy/archive/refs/tags/1.1.10.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DSNAPPY_BUILD_TESTS=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: protobuf
+  version: 25.1
+  source: https://github.com/protocolbuffers/protobuf/archive/refs/tags/v25.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -Dprotobuf_BUILD_TESTS=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: thrift
+  version: 0.19.0
+  source: https://github.com/apache/thrift/archive/refs/tags/v0.19.0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DBUILD_TESTING=OFF -DBUILD_JAVA=OFF -DBUILD_PYTHON=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+EOF
