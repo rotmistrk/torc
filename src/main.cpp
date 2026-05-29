@@ -7,6 +7,7 @@
 #include "generate.hpp"
 #include "hook.hpp"
 #include "install.hpp"
+#include "localdep.hpp"
 #include "manifest.hpp"
 #include "scaffold.hpp"
 #include "update.hpp"
@@ -40,6 +41,16 @@ static int do_generate(int /*argc*/, char** /*argv*/) {
         return EX_IOERR;
     }
     diag::info("wrote extdep.mak");
+
+    auto local = load_local_deps(MANIFEST_FILE);
+    if (!local.libs().empty() || !local.targets().empty()) {
+        auto lc = generate_localdep_mak(local);
+        if (!write_mak("localdep.mak", lc)) {
+            diag::error("generate", "failed to write localdep.mak");
+            return EX_IOERR;
+        }
+        diag::info("wrote localdep.mak");
+    }
     return EX_OK;
 }
 
