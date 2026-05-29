@@ -50,15 +50,18 @@ class Manifest {
     const std::string& depdir() const { return depdir_; }
     int parallel() const { return parallel_; }
     const std::vector<Package>& packages() const { return packages_; }
+    const std::vector<std::string>& checkers() const { return checkers_; }
 
     void set_depdir(std::string v) { depdir_ = std::move(v); }
     void set_parallel(int v) { parallel_ = v < 1 ? 1 : v; }
     void add_package(Package p) { packages_.push_back(std::move(p)); }
+    void add_checker(std::string v) { checkers_.push_back(std::move(v)); }
 
   private:
     std::string depdir_;
     int parallel_ = 4;
     std::vector<Package> packages_;
+    std::vector<std::string> checkers_;
 };
 
 // Parse manifest from file. Returns empty manifest + sets err on failure.

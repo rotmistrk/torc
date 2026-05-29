@@ -84,6 +84,14 @@ Manifest load_manifest(const std::string& path, std::string& err) {
         }
     }
 
+    if (auto* chk = root.get("checkers")) {
+        if (chk->is_list()) {
+            for (const auto& item : chk->as_list()) {
+                if (item.is_scalar()) m.add_checker(item.as_scalar());
+            }
+        }
+    }
+
     return m;
 }
 

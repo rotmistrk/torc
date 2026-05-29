@@ -86,7 +86,7 @@ int cmd_update(const Manifest& m, const UpdateOpts& opts,
         return EX_OK;
     }
 
-    auto checkers = default_checkers();
+    auto checkers = build_checkers(m.checkers());
     auto infos = check_packages(m, checkers);
 
     int updates = 0;
