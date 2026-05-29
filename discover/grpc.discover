@@ -1,0 +1,38 @@
+#!/bin/sh
+# Discover: gRPC depends on protobuf, abseil, re2, zlib
+# Usage: grpc.discover <name> <version> <prefix>
+
+cat <<EOF
+- name: protobuf
+  version: 25.1
+  source: https://github.com/protocolbuffers/protobuf/archive/refs/tags/v25.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -Dprotobuf_BUILD_TESTS=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: abseil-cpp
+  version: 20240116.0
+  source: https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DABSL_BUILD_TESTING=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: re2
+  version: 2024-02-01
+  source: https://github.com/google/re2/archive/refs/tags/2024-02-01.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DRE2_BUILD_TESTING=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+EOF

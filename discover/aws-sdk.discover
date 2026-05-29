@@ -1,0 +1,30 @@
+#!/bin/sh
+# Discover: AWS SDK for C++ depends on curl, openssl, zlib
+# Usage: aws-sdk.discover <name> <version> <prefix>
+
+cat <<EOF
+- name: curl
+  version: 8.6.0
+  source: https://github.com/curl/curl/archive/refs/tags/curl-8_6_0.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DBUILD_TESTING=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+- name: openssl
+  version: 3.2.1
+  source: https://github.com/openssl/openssl/archive/refs/tags/openssl-3.2.1.tar.gz
+  sha256: ""
+  build: |
+    ./Configure --prefix=\${PREFIX} --openssldir=\${PREFIX}/ssl
+    make -j\${JOBS}
+    make install_sw
+- name: zlib
+  version: 1.3.1
+  source: https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX}
+    cmake --build build -j\${JOBS}
+    cmake --install build
+EOF

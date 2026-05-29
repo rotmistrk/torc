@@ -1,0 +1,15 @@
+#!/bin/sh
+# Discover: spdlog depends on fmt
+# Usage: spdlog.discover <name> <version> <prefix>
+# Outputs YAML list of transitive dependencies.
+
+cat <<EOF
+- name: fmt
+  version: 10.2.1
+  source: https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.tar.gz
+  sha256: ""
+  build: |
+    cmake -B build -DCMAKE_INSTALL_PREFIX=\${PREFIX} -DFMT_TEST=OFF
+    cmake --build build -j\${JOBS}
+    cmake --install build
+EOF
