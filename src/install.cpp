@@ -1,5 +1,6 @@
 #include "install.hpp"
 #include "diag.hpp"
+#include "discover.hpp"
 #include "exitcodes.hpp"
 #include "fetch.hpp"
 #include "parallel.hpp"
@@ -7,6 +8,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
+#include <set>
 
 namespace torc {
 
@@ -105,6 +107,23 @@ int cmd_install(const Manifest& m, bool force) {
     if (failures > 0) {
         diag::error("install", std::to_string(failures) + " package(s) failed");
         return EX_IOERR;
+    }
+
+    // Transitive dependency discovery
+    std::set<std::string> installed;
+    for (const auto& pkg : m.packages())
+        installed.insert(pkg.name() + "/" + pkg.version());
+
+    for (const auto& pkg : m.packages()) {
+        if (pkg.discover().empty()) continue;
+        std::string prefix = depdir + "/" + pkg.name() + "/" + pkg.version();
+        discover_deps(pkg, prefix, [&](Package dep) {
+            std::string key = dep.name() + "/" + dep.version();
+            if (installed.count(key)) return;
+            installed.insert(key);
+            diag::info("transitive: " + key);
+            install_package(dep, depdir, m.parallel());
+        });
     }
 
     diag::info("all packages installed to " + depdir);
