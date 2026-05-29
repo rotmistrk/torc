@@ -5,12 +5,11 @@
 
 namespace torc {
 
-std::vector<TaskResult> run_parallel(
+void run_parallel(
     const std::vector<std::pair<std::string, std::function<int()>>>& tasks,
-    int max_parallel) {
+    int max_parallel,
+    const TaskCallback& on_done) {
 
-    std::vector<TaskResult> results;
-    results.resize(tasks.size());
     std::mutex mtx;
     size_t next_task = 0;
 
@@ -22,8 +21,11 @@ std::vector<TaskResult> run_parallel(
                 if (next_task >= tasks.size()) return;
                 idx = next_task++;
             }
-            results[idx].set_name(tasks[idx].first);
-            results[idx].set_exit_code(tasks[idx].second());
+            int rc = tasks[idx].second();
+            {
+                std::lock_guard lock(mtx);
+                on_done(tasks[idx].first, rc);
+            }
         }
     };
 
@@ -36,8 +38,6 @@ std::vector<TaskResult> run_parallel(
     for (auto& t : threads) {
         t.join();
     }
-
-    return results;
 }
 
 } // namespace torc

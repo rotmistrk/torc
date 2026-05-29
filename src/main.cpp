@@ -45,13 +45,14 @@ static int do_generate(int /*argc*/, char** /*argv*/) {
 
 static int do_clean(int /*argc*/, char** /*argv*/) {
     auto m = load_or_die();
-    auto stale = find_stale(m);
-    if (stale.empty()) {
-        diag::info("nothing to clean");
-        return EX_OK;
-    }
-    int removed = clean_stale(stale, false);
-    diag::info("removed " + std::to_string(removed) + " stale version(s)");
+    int removed = 0;
+    int found = 0;
+    for_each_stale(m, [&](const StaleEntry& e) {
+        ++found;
+        if (remove_stale(e)) ++removed;
+    });
+    if (found == 0) diag::info("nothing to clean");
+    else diag::info("removed " + std::to_string(removed) + " stale version(s)");
     return EX_OK;
 }
 

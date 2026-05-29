@@ -98,11 +98,10 @@ int cmd_install(const Manifest& m, bool force) {
         });
     }
 
-    auto results = run_parallel(tasks, m.parallel());
     int failures = 0;
-    for (const auto& r : results) {
-        if (r.exit_code() != 0) ++failures;
-    }
+    run_parallel(tasks, m.parallel(), [&](const std::string& /*name*/, int rc) {
+        if (rc != 0) ++failures;
+    });
     if (failures > 0) {
         diag::error("install", std::to_string(failures) + " package(s) failed");
         return EX_IOERR;

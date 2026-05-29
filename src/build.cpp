@@ -1,10 +1,9 @@
 #include "build.hpp"
 #include "diag.hpp"
 #include "exitcodes.hpp"
-#include "generate.hpp"
 #include "parallel.hpp"
+#include "sources.hpp"
 
-#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -13,23 +12,6 @@
 namespace fs = std::filesystem;
 
 namespace torc {
-
-static std::vector<std::string> discover_sources(const std::string& src_dir,
-                                                  bool recursive) {
-    std::vector<std::string> srcs;
-    if (!fs::is_directory(src_dir)) return srcs;
-    if (recursive) {
-        for (const auto& e : fs::recursive_directory_iterator(src_dir)) {
-            if (e.path().extension() == ".cpp") srcs.push_back(e.path().string());
-        }
-    } else {
-        for (const auto& e : fs::directory_iterator(src_dir)) {
-            if (e.path().extension() == ".cpp") srcs.push_back(e.path().string());
-        }
-    }
-    std::sort(srcs.begin(), srcs.end());
-    return srcs;
-}
 
 static std::string obj_path(const std::string& src, const std::string& out_dir,
                             const std::string& src_dir) {
@@ -44,7 +26,6 @@ static bool needs_rebuild(const std::string& src, const std::string& obj) {
     auto obj_time = fs::last_write_time(obj);
     if (fs::last_write_time(src) > obj_time) return true;
 
-    // Check .d file for header deps
     auto dfile = fs::path(obj);
     dfile.replace_extension(".d");
     if (!fs::exists(dfile)) return true;
@@ -89,9 +70,7 @@ static std::string build_ldflags(const Manifest& m) {
 
 static std::string build_libs(const Manifest& m) {
     std::string libs;
-    for (const auto& pkg : m.packages()) {
-        libs += " -l" + pkg.lib_name();
-    }
+    for (const auto& pkg : m.packages()) libs += " -l" + pkg.lib_name();
     return libs;
 }
 
@@ -104,14 +83,13 @@ static int compile_sources(
         std::string cmd = cxx + " " + cxxflags + " -MMD -MP -c -o " + obj + " " + src;
         tasks.emplace_back(src, [cmd]() { return std::system(cmd.c_str()); });
     }
-    auto results = run_parallel(tasks, parallel);
-    for (const auto& r : results) {
-        if (r.exit_code() != 0) {
-            diag::error("build", "compilation failed: " + r.name());
-            return EX_IOERR;
-        }
-    }
-    return EX_OK;
+    int fail_rc = EX_OK;
+    std::string fail_name;
+    run_parallel(tasks, parallel, [&](const std::string& name, int rc) {
+        if (rc != 0 && fail_rc == EX_OK) { fail_rc = EX_IOERR; fail_name = name; }
+    });
+    if (fail_rc != EX_OK) diag::error("build", "compilation failed: " + fail_name);
+    return fail_rc;
 }
 
 static int link_target(const std::vector<std::string>& all_objs,
@@ -130,7 +108,10 @@ static int link_target(const std::vector<std::string>& all_objs,
 }
 
 int cmd_build(const Manifest& m, const BuildOpts& opts) {
-    auto srcs = discover_sources(opts.src_dir(), opts.recursive());
+    std::vector<std::string> srcs;
+    for_each_source(opts.src_dir(), opts.recursive(), [&](const std::string& p) {
+        srcs.push_back(p);
+    });
     if (srcs.empty()) {
         diag::error("build", "no .cpp files found in " + opts.src_dir());
         return EX_NOINPUT;

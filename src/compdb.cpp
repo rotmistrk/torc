@@ -1,29 +1,14 @@
 #include "compdb.hpp"
 #include "diag.hpp"
 #include "exitcodes.hpp"
+#include "sources.hpp"
 
-#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
 
 namespace torc {
-
-static std::vector<std::string> find_sources(const std::string& src_dir,
-                                             bool recursive) {
-    std::vector<std::string> srcs;
-    if (!fs::is_directory(src_dir)) return srcs;
-    if (recursive) {
-        for (const auto& e : fs::recursive_directory_iterator(src_dir))
-            if (e.path().extension() == ".cpp") srcs.push_back(e.path().string());
-    } else {
-        for (const auto& e : fs::directory_iterator(src_dir))
-            if (e.path().extension() == ".cpp") srcs.push_back(e.path().string());
-    }
-    std::sort(srcs.begin(), srcs.end());
-    return srcs;
-}
 
 static std::string compile_flags(const Manifest& m, const CompdbOpts& opts) {
     std::string flags = "-std=" + opts.std_ver();
@@ -47,12 +32,6 @@ static std::string escape_json(const std::string& s) {
 }
 
 int cmd_compdb(const Manifest& m, const CompdbOpts& opts) {
-    auto srcs = find_sources(opts.src_dir(), opts.recursive());
-    if (srcs.empty()) {
-        diag::error("compdb", "no .cpp files found in " + opts.src_dir());
-        return EX_NOINPUT;
-    }
-
     std::string cxx = "g++";
     if (auto* env = std::getenv("CXX")) cxx = env;
     std::string flags = compile_flags(m, opts);
@@ -64,25 +43,34 @@ int cmd_compdb(const Manifest& m, const CompdbOpts& opts) {
         return EX_IOERR;
     }
 
+    int count = 0;
+    bool first = true;
     out << "[\n";
-    for (size_t i = 0; i < srcs.size(); ++i) {
-        auto rel = fs::relative(fs::path(srcs[i]), fs::path(opts.src_dir()));
+
+    for_each_source(opts.src_dir(), opts.recursive(), [&](const std::string& src) {
+        auto rel = fs::relative(fs::path(src), fs::path(opts.src_dir()));
         std::string obj = opts.out_dir() + "/" + rel.string();
         obj = fs::path(obj).replace_extension(".o").string();
+        std::string cmd = cxx + " " + flags + " -MMD -MP -c -o " + obj + " " + src;
 
-        std::string cmd = cxx + " " + flags + " -MMD -MP -c -o " + obj + " " + srcs[i];
-
+        if (!first) out << ",\n";
+        first = false;
         out << "  {\n";
         out << "    \"directory\": \"" << escape_json(dir) << "\",\n";
         out << "    \"command\": \"" << escape_json(cmd) << "\",\n";
-        out << "    \"file\": \"" << escape_json(srcs[i]) << "\"\n";
+        out << "    \"file\": \"" << escape_json(src) << "\"\n";
         out << "  }";
-        if (i + 1 < srcs.size()) out << ",";
-        out << "\n";
-    }
-    out << "]\n";
+        ++count;
+    });
 
-    diag::info("wrote compile_commands.json (" + std::to_string(srcs.size()) + " entries)");
+    out << "\n]\n";
+
+    if (count == 0) {
+        diag::error("compdb", "no .cpp files found in " + opts.src_dir());
+        return EX_NOINPUT;
+    }
+
+    diag::info("wrote compile_commands.json (" + std::to_string(count) + " entries)");
     return EX_OK;
 }
 
