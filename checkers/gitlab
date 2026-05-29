@@ -1,0 +1,29 @@
+#!/bin/sh
+# torc checker: GitLab releases
+# Usage:
+#   gitlab --can-check <url>   → exit 0 if gitlab.com URL
+#   gitlab --latest <url>      → print latest version
+
+set -e
+
+case "$1" in
+    --can-check)
+        echo "$2" | grep -q 'gitlab.com/' && exit 0
+        exit 1
+        ;;
+    --latest)
+        # Extract project path from URL
+        # e.g., https://gitlab.com/org/repo/-/archive/v1.0/...
+        PROJECT=$(echo "$2" | sed -n 's|.*gitlab\.com/\([^/]*/[^/]*\)/.*|\1|p')
+        if [ -z "$PROJECT" ]; then exit 1; fi
+        ENCODED=$(echo "$PROJECT" | sed 's|/|%2F|g')
+        # Query GitLab API for latest release
+        RESPONSE=$(curl -fsSL "https://gitlab.com/api/v4/projects/${ENCODED}/releases" 2>/dev/null)
+        # Extract first tag_name
+        echo "$RESPONSE" | grep -o '"tag_name":"[^"]*"' | head -1 | sed 's/.*"tag_name":"v\?\([^"]*\)".*/\1/'
+        ;;
+    *)
+        echo "Usage: $0 --can-check <url> | --latest <url>" >&2
+        exit 1
+        ;;
+esac

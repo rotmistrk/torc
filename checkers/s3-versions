@@ -1,0 +1,42 @@
+#!/bin/sh
+# torc checker: S3 bucket version listing
+# Expects source URLs like: https://s3.amazonaws.com/bucket/pkg/1.0.0/pkg.tar.gz
+# or s3://bucket/pkg/VERSION/pkg.tar.gz pattern
+#
+# Usage:
+#   s3-versions --can-check <url>   → exit 0 if S3 URL
+#   s3-versions --latest <url>      → print latest semver from bucket prefix
+
+set -e
+
+case "$1" in
+    --can-check)
+        echo "$2" | grep -qE '(s3\.amazonaws\.com|s3://)' && exit 0
+        exit 1
+        ;;
+    --latest)
+        URL="$2"
+        # Extract bucket and prefix
+        if echo "$URL" | grep -q 's3://'; then
+            BUCKET=$(echo "$URL" | sed 's|s3://\([^/]*\)/.*|\1|')
+            PREFIX=$(echo "$URL" | sed 's|s3://[^/]*/\(.*\)/[^/]*/[^/]*$|\1|')
+        else
+            BUCKET=$(echo "$URL" | sed 's|.*/\([^/]*\)\.s3\.amazonaws\.com/.*|\1|')
+            if [ "$BUCKET" = "$URL" ]; then
+                BUCKET=$(echo "$URL" | sed 's|.*s3\.amazonaws\.com/\([^/]*\)/.*|\1|')
+            fi
+            PREFIX=$(echo "$URL" | sed 's|.*/'"$BUCKET"'/\(.*\)/[^/]*/[^/]*$|\1|')
+        fi
+        if [ -z "$BUCKET" ] || [ -z "$PREFIX" ]; then exit 1; fi
+        # List versions via AWS CLI
+        aws s3 ls "s3://${BUCKET}/${PREFIX}/" 2>/dev/null \
+            | grep 'PRE' \
+            | sed 's|.*PRE \(.*\)/|\1|' \
+            | sort -V \
+            | tail -1
+        ;;
+    *)
+        echo "Usage: $0 --can-check <url> | --latest <url>" >&2
+        exit 1
+        ;;
+esac

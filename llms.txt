@@ -1,0 +1,88 @@
+# torc — C++ Package Manager
+
+## What is torc?
+A minimal, Make-native C++ dependency manager. It fetches, builds, and installs
+C++ dependencies, then generates includable .mak fragments.
+
+## Commands
+- `torc install` — fetch, SHA-256 verify, build, install packages
+- `torc generate` — emit extdep.mak and localdep.mak
+- `torc build` — compile sources directly (no Makefile needed)
+- `torc compdb` — generate compile_commands.json for IDEs
+- `torc update` — check for newer versions (--apply to rewrite manifest)
+- `torc clean` — remove stale versions from depdir
+- `torc list` — show declared packages
+- `torc new <name>` — scaffold a new C++ project
+- `torc init` — generate a starter Makefile
+- `torc hook` — inject torc block into existing Makefile
+
+Run `torc <command> --help` for options.
+
+## Manifest Format (torc.yaml)
+```yaml
+depdir: ~/.local/share/torc
+parallel: 4
+ldlibs: -lpthread
+
+packages:
+  - name: fmt
+    version: 10.1.1
+    source: https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz
+    sha256: abc123...
+    build: |
+      cmake -B build -DCMAKE_INSTALL_PREFIX=${PREFIX}
+      cmake --build build -j${JOBS}
+      cmake --install build
+    discover: ./checkers/fmt.discover
+
+checkers:
+  - ./checkers/gitlab
+
+toolchains:
+  aarch64:
+    cxx: aarch64-linux-gnu-g++
+    cxxflags: --sysroot=/usr/aarch64-linux-gnu
+    out: build-aarch64
+
+local:
+  libs:
+    - name: util
+      dir: lib/util
+      include: lib/util/include
+    - name: core
+      dir: lib/core
+      deps: [util]
+  targets:
+    - name: myapp
+      dir: src
+      deps: [core, util]
+```
+
+## Key Concepts
+- `depdir` — shared directory where packages are installed (user or group level)
+- `${PREFIX}` — substituted with install path during build
+- `${JOBS}` — substituted with parallel job count
+- `discover` — script that outputs transitive deps as YAML list
+- `checkers` — scripts for version checking non-GitHub sources
+- `toolchains` — named cross-compilation configurations
+- `local` — inter-library dependency graph for multi-dir projects
+
+## Checker Protocol
+A checker script responds to:
+- `<script> --can-check <url>` → exit 0 if it handles this URL
+- `<script> --latest <url>` → print latest version to stdout
+
+## Discover Protocol
+A discover script receives: `<script> <name> <version> <prefix>`
+Outputs: YAML list of additional package entries.
+
+## Build Behavior
+- `torc build` discovers *.cpp in src/, compiles with -MMD for incremental rebuilds
+- Uses manifest packages for -I and -L flags automatically
+- `--release` enables -O2 -DNDEBUG, default is -O0 -g
+- `--toolchain=NAME` selects cross-compilation config from manifest
+
+## Environment
+- `CXX` — override compiler (default: g++)
+- `NO_COLOR` — disable colored output
+- Exit codes follow sysexits.h (64=usage, 65=data, 66=noinput, etc.)
