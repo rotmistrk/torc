@@ -1,0 +1,35 @@
+#!/bin/sh
+# torc checker: Snap package versions
+# Handles "snap:<name>" source convention.
+#
+# Usage:
+#   snap-pkg --can-check <url>   → exit 0 if snap-style source
+#   snap-pkg --latest <url>      → print latest stable version
+
+set -e
+
+case "$1" in
+    --can-check)
+        echo "$2" | grep -qE '^snap:' && exit 0
+        echo "$2" | grep -qE 'snapcraft\.io' && exit 0
+        exit 1
+        ;;
+    --latest)
+        PKG=$(echo "$2" | sed -n 's|^snap:\(.*\)|\1|p')
+        if [ -z "$PKG" ]; then
+            PKG=$(echo "$2" | grep -oE '[a-z][a-z0-9-]+' | tail -1)
+        fi
+        if [ -z "$PKG" ]; then exit 1; fi
+        # Query Snap Store API
+        VERSION=$(curl -fsSL -H 'Snap-Device-Series: 16' \
+            "https://api.snapcraft.io/v2/snaps/info/${PKG}" 2>/dev/null \
+            | grep -o '"version":"[^"]*"' | head -1 \
+            | sed 's/"version":"\([^"]*\)"/\1/')
+        if [ -z "$VERSION" ]; then exit 1; fi
+        echo "$VERSION"
+        ;;
+    *)
+        echo "Usage: $0 --can-check <url> | --latest <url>" >&2
+        exit 1
+        ;;
+esac
