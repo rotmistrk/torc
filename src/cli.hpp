@@ -1,71 +1,64 @@
 #pragma once
-// torc — declarative CLI option system
-// Options are declared via add_option/add_command; help is auto-generated.
+// torc — declarative CLI parser with typed option binding
 
-#include <functional>
 #include <getopt.h>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace torc::cli {
 
-class OptDef {
-  public:
-    OptDef(char short_name, std::string long_name, std::string arg_name,
-           std::string description, bool has_arg)
-        : short_name_(short_name), long_name_(std::move(long_name)),
-          arg_name_(std::move(arg_name)), description_(std::move(description)),
-          has_arg_(has_arg) {}
-
-    char short_name() const { return short_name_; }
-    const std::string& long_name() const { return long_name_; }
-    const std::string& arg_name() const { return arg_name_; }
-    const std::string& description() const { return description_; }
-    bool has_arg() const { return has_arg_; }
-
-  private:
-    char short_name_;
-    std::string long_name_;
-    std::string arg_name_;
-    std::string description_;
-    bool has_arg_;
-};
-
-class Command {
-  public:
-    Command(std::string name, std::string brief,
-            std::function<int(int, char**)> run)
-        : name_(std::move(name)), brief_(std::move(brief)),
-          run_(std::move(run)) {}
-
-    const std::string& name() const { return name_; }
-    const std::string& brief() const { return brief_; }
-    int run(int argc, char** argv) const { return run_(argc, argv); }
-
-  private:
-    std::string name_;
-    std::string brief_;
-    std::function<int(int, char**)> run_;
-};
-
 class Parser {
   public:
-    void add_option(OptDef opt);
-    void add_command(Command cmd);
-    int parse_and_dispatch(int argc, char** argv);
-    void print_help(std::string_view program) const;
-    void print_version() const;
-    bool has(std::string_view long_name) const;
-    std::string_view get(std::string_view long_name) const;
+    explicit Parser(std::string usage = "") : usage_(std::move(usage)) {}
+
+    // Bind a boolean flag
+    Parser& flag(bool* dest, char short_name, const std::string& long_name,
+                 const std::string& desc);
+
+    // Bind a string option with argument
+    Parser& option(std::string* dest, char short_name,
+                   const std::string& long_name, const std::string& arg_name,
+                   const std::string& desc);
+
+    // Parse argv. Returns 0 on success, EX_OK if --help was shown, or
+    // EX_USAGE on error. Caller should return non-zero results immediately.
+    int parse(int argc, char** argv);
+
+    // Positional arguments remaining after option parsing
+    const std::vector<std::string>& positionals() const { return positionals_; }
+    bool has_positional(size_t n = 0) const { return n < positionals_.size(); }
+    const std::string& positional(size_t n) const { return positionals_[n]; }
+
+    // Print help to stderr
+    void print_help() const;
 
   private:
-    std::vector<OptDef> options_;
-    std::vector<Command> commands_;
-    std::vector<std::pair<std::string, std::string>> parsed_;
+    struct BoundFlag {
+        bool* dest;
+        char short_name;
+        std::string long_name;
+        std::string desc;
+    };
+    struct BoundOption {
+        std::string* dest;
+        char short_name;
+        std::string long_name;
+        std::string arg_name;
+        std::string desc;
+    };
+
+    std::string usage_;
+    std::vector<BoundFlag> flags_;
+    std::vector<BoundOption> options_;
+    std::vector<std::string> positionals_;
 
     std::string build_short_opts() const;
     std::vector<struct option> build_long_opts() const;
 };
+
+// Print version string
+void print_version();
 
 } // namespace torc::cli
