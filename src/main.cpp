@@ -9,6 +9,7 @@
 #include "install.hpp"
 #include "manifest.hpp"
 #include "scaffold.hpp"
+#include "update.hpp"
 
 #include <string>
 
@@ -136,6 +137,15 @@ static int do_compdb(int argc, char** argv) {
     return cmd_compdb(load_or_die(), parse_compdb_opts(argc, argv));
 }
 
+static int do_update(int argc, char** argv) {
+    UpdateOpts opts;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--apply") opts.set_apply(true);
+    }
+    return cmd_update(load_or_die(), opts, MANIFEST_FILE);
+}
+
 int main(int argc, char** argv) {
     Parser parser;
 
@@ -151,6 +161,7 @@ int main(int argc, char** argv) {
     parser.add_command({"generate", "Emit extdep.mak",                do_generate});
     parser.add_command({"build",    "Compile sources directly",       do_build});
     parser.add_command({"compdb",   "Generate compile_commands.json", do_compdb});
+    parser.add_command({"update",   "Check for newer versions",       do_update});
     parser.add_command({"clean",    "Remove stale versions",          do_clean});
     parser.add_command({"list",     "List declared packages",         do_list});
     parser.add_command({"new",      "Create a new project",           do_new});
