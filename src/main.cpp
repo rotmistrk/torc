@@ -29,6 +29,12 @@ static Manifest load_or_die() {
     return m;
 }
 
+static bool wants_help(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i)
+        if (std::string(argv[i]) == "--help" || std::string(argv[i]) == "-h") return true;
+    return false;
+}
+
 static int do_install(int /*argc*/, char** /*argv*/) {
     return cmd_install(load_or_die(), false);
 }
@@ -88,6 +94,14 @@ static NewOpts parse_new_opts(int argc, char** argv) {
 }
 
 static int do_new(int argc, char** argv) {
+    if (wants_help(argc, argv)) {
+        std::fprintf(stderr,
+            "Usage: torc new <name> [options]\n\n"
+            "Options:\n"
+            "  --lib           Create library skeleton\n"
+            "  --no-git        Skip git init\n");
+        return EX_OK;
+    }
     return cmd_new(parse_new_opts(argc, argv));
 }
 
@@ -103,6 +117,15 @@ static InitOpts parse_init_opts(int argc, char** argv) {
 }
 
 static int do_init(int argc, char** argv) {
+    if (wants_help(argc, argv)) {
+        std::fprintf(stderr,
+            "Usage: torc init [options]\n\n"
+            "Options:\n"
+            "  --dir=PATH      Target directory (default: .)\n"
+            "  --name=NAME     Project name (default: dir name)\n"
+            "  --force         Overwrite existing Makefile\n");
+        return EX_OK;
+    }
     return cmd_init(parse_init_opts(argc, argv));
 }
 
@@ -130,6 +153,18 @@ static BuildOpts parse_build_opts(int argc, char** argv) {
 }
 
 static int do_build(int argc, char** argv) {
+    if (wants_help(argc, argv)) {
+        std::fprintf(stderr,
+            "Usage: torc build [options]\n\n"
+            "Options:\n"
+            "  --src=DIR       Source directory (default: src)\n"
+            "  --out=DIR       Output directory (default: build)\n"
+            "  --target=NAME   Binary name (default: project dir name)\n"
+            "  --std=STD       C++ standard (default: c++20)\n"
+            "  --release       Optimize (-O2 -DNDEBUG)\n"
+            "  --recursive     Recurse into subdirectories\n");
+        return EX_OK;
+    }
     return cmd_build(load_or_die(), parse_build_opts(argc, argv));
 }
 
@@ -146,10 +181,27 @@ static CompdbOpts parse_compdb_opts(int argc, char** argv) {
 }
 
 static int do_compdb(int argc, char** argv) {
+    if (wants_help(argc, argv)) {
+        std::fprintf(stderr,
+            "Usage: torc compdb [options]\n\n"
+            "Options:\n"
+            "  --src=DIR       Source directory (default: src)\n"
+            "  --out=DIR       Output directory for .o paths (default: build)\n"
+            "  --std=STD       C++ standard (default: c++20)\n"
+            "  --recursive     Recurse into subdirectories\n");
+        return EX_OK;
+    }
     return cmd_compdb(load_or_die(), parse_compdb_opts(argc, argv));
 }
 
 static int do_update(int argc, char** argv) {
+    if (wants_help(argc, argv)) {
+        std::fprintf(stderr,
+            "Usage: torc update [options]\n\n"
+            "Options:\n"
+            "  --apply         Rewrite manifest with new versions\n");
+        return EX_OK;
+    }
     UpdateOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

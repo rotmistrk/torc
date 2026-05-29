@@ -28,12 +28,17 @@ make                   # build your project
 | Command    | Description                                      |
 |------------|--------------------------------------------------|
 | `install`  | Fetch, SHA-256 verify, build, install to depdir  |
-| `generate` | Emit `extdep.mak` (include paths, link flags)    |
+| `generate` | Emit `extdep.mak` and `localdep.mak`            |
+| `build`    | Compile sources directly (no Makefile needed)    |
+| `compdb`   | Generate `compile_commands.json` for IDEs        |
+| `update`   | Check GitHub for newer versions (`--apply`)      |
 | `clean`    | Remove stale/unused versions from depdir         |
 | `list`     | Show installed packages and status               |
 | `new`      | Scaffold a new C++ project                       |
 | `init`     | Generate a starter Makefile                      |
 | `hook`     | Inject torc block into existing Makefile         |
+
+Run `torc <command> --help` for per-command options.
 
 ## Manifest
 
@@ -78,6 +83,29 @@ make install-local    # installs to ~/.local/bin/torc
 - SHA-256 verification on all downloads before any execution
 - Explicit over clever: no hidden magic, no network without user action
 - Shared dependency directory (user or group level)
+- Pluggable version checkers (built-in GitHub + custom scripts)
+- Colored output respects `NO_COLOR` environment variable
+
+## Local Dependencies
+
+For multi-library projects, declare inter-library deps in `torc.yaml`:
+
+```yaml
+local:
+  libs:
+    - name: util
+      dir: lib/util
+      include: lib/util/include
+    - name: core
+      dir: lib/core
+      deps: [util]
+  targets:
+    - name: myapp
+      dir: src
+      deps: [core, util]
+```
+
+`torc generate` emits `localdep.mak` with build order, flags, and dependency rules.
 
 ## License
 
