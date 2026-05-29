@@ -134,9 +134,9 @@ static void test_hook_replace() {
     {
         std::ofstream f(mf);
         f << "CXX = g++\n"
-          << "# ── BEGIN torc ──────────────────────────────────────────\n"
+          << "# ── BEGIN torc ─────────────────────────\n"
           << "OLD STUFF\n"
-          << "# ── END torc ────────────────────────────────────────────\n"
+          << "# ── END torc ───────────────────────────\n"
           << "all:\n\techo hi\n";
     }
 

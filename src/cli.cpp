@@ -19,11 +19,11 @@ void Parser::add_command(Command cmd) {
 }
 
 std::string Parser::build_short_opts() const {
-    std::string s = "+"; // POSIX: stop at first non-option
+    std::string s = "+";
     for (const auto& o : options_) {
-        if (o.short_name != '\0') {
-            s += o.short_name;
-            if (o.has_arg) s += ':';
+        if (o.short_name() != '\0') {
+            s += o.short_name();
+            if (o.has_arg()) s += ':';
         }
     }
     return s;
@@ -32,10 +32,10 @@ std::string Parser::build_short_opts() const {
 std::vector<struct option> Parser::build_long_opts() const {
     std::vector<struct option> opts;
     for (const auto& o : options_) {
-        opts.push_back({o.long_name.c_str(),
-                        o.has_arg ? required_argument : no_argument,
+        opts.push_back({o.long_name().c_str(),
+                        o.has_arg() ? required_argument : no_argument,
                         nullptr,
-                        o.short_name != '\0' ? o.short_name : 0});
+                        o.short_name() != '\0' ? o.short_name() : 0});
     }
     opts.push_back({nullptr, 0, nullptr, 0});
     return opts;
@@ -65,18 +65,14 @@ int Parser::parse_and_dispatch(int argc, char** argv) {
         if (ch == 'h') { print_help(argv[0]); return EX_OK; }
         if (ch == 'V') { print_version(); return EX_OK; }
 
-        // Find matching option
         for (const auto& o : options_) {
-            if (o.short_name == ch ||
-                (!o.long_name.empty() && ch == 0)) {
-                parsed_.emplace_back(o.long_name,
-                                     optarg ? optarg : "");
+            if (o.short_name() == ch) {
+                parsed_.emplace_back(o.long_name(), optarg ? optarg : "");
                 break;
             }
         }
     }
 
-    // Remaining args: first is subcommand
     if (optind >= argc) {
         print_help(argv[0]);
         return EX_USAGE;
@@ -84,7 +80,7 @@ int Parser::parse_and_dispatch(int argc, char** argv) {
 
     std::string_view subcmd = argv[optind];
     for (const auto& cmd : commands_) {
-        if (cmd.name == subcmd) {
+        if (cmd.name() == subcmd) {
             return cmd.run(argc - optind, argv + optind);
         }
     }
@@ -101,7 +97,7 @@ void Parser::print_help(std::string_view program) const {
         std::fprintf(stderr, "Commands:\n");
         for (const auto& cmd : commands_) {
             std::fprintf(stderr, "  %-14s %s\n",
-                         cmd.name.c_str(), cmd.brief.c_str());
+                         cmd.name().c_str(), cmd.brief().c_str());
         }
         std::fprintf(stderr, "\n");
     }
@@ -109,18 +105,19 @@ void Parser::print_help(std::string_view program) const {
     std::fprintf(stderr, "Options:\n");
     for (const auto& o : options_) {
         char short_buf[8] = "    ";
-        if (o.short_name != '\0') {
-            std::snprintf(short_buf, sizeof(short_buf), "-%c, ", o.short_name);
+        if (o.short_name() != '\0') {
+            std::snprintf(short_buf, sizeof(short_buf), "-%c, ", o.short_name());
         }
-        if (o.arg_name.empty()) {
+        if (o.arg_name().empty()) {
             std::fprintf(stderr, "  %s--%-16s %s\n",
-                         short_buf, o.long_name.c_str(), o.description.c_str());
+                         short_buf, o.long_name().c_str(),
+                         o.description().c_str());
         } else {
             char long_buf[32];
             std::snprintf(long_buf, sizeof(long_buf), "%s=%s",
-                          o.long_name.c_str(), o.arg_name.c_str());
+                          o.long_name().c_str(), o.arg_name().c_str());
             std::fprintf(stderr, "  %s--%-16s %s\n",
-                         short_buf, long_buf, o.description.c_str());
+                         short_buf, long_buf, o.description().c_str());
         }
     }
 }

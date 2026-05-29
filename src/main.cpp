@@ -12,6 +12,7 @@
 #include <string>
 
 using namespace torc;
+using namespace torc::cli;
 
 static const std::string MANIFEST_FILE = "torc.yaml";
 
@@ -26,8 +27,7 @@ static Manifest load_or_die() {
 }
 
 static int do_install(int /*argc*/, char** /*argv*/) {
-    auto m = load_or_die();
-    return cmd_install(m, false);
+    return cmd_install(load_or_die(), false);
 }
 
 static int do_generate(int /*argc*/, char** /*argv*/) {
@@ -62,26 +62,34 @@ static int do_list(int /*argc*/, char** /*argv*/) {
     return EX_OK;
 }
 
-static int do_new(int argc, char** argv) {
+static NewOpts parse_new_opts(int argc, char** argv) {
     NewOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--lib") opts.set_lib(true);
-        else if (arg == "--no-git") opts.set_no_git(true);
-        else if (arg[0] != '-') opts.set_name(arg);
+        if (arg == "--lib") { opts.set_lib(true); continue; }
+        if (arg == "--no-git") { opts.set_no_git(true); continue; }
+        if (arg[0] != '-') opts.set_name(arg);
     }
-    return cmd_new(opts);
+    return opts;
 }
 
-static int do_init(int argc, char** argv) {
+static int do_new(int argc, char** argv) {
+    return cmd_new(parse_new_opts(argc, argv));
+}
+
+static InitOpts parse_init_opts(int argc, char** argv) {
     InitOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--force") opts.set_force(true);
-        else if (arg.rfind("--dir=", 0) == 0) opts.set_dir(arg.substr(6));
-        else if (arg.rfind("--name=", 0) == 0) opts.set_name(arg.substr(7));
+        if (arg == "--force") { opts.set_force(true); continue; }
+        if (arg.rfind("--dir=", 0) == 0) { opts.set_dir(arg.substr(6)); continue; }
+        if (arg.rfind("--name=", 0) == 0) opts.set_name(arg.substr(7));
     }
-    return cmd_init(opts);
+    return opts;
+}
+
+static int do_init(int argc, char** argv) {
+    return cmd_init(parse_init_opts(argc, argv));
 }
 
 static int do_hook(int argc, char** argv) {
@@ -93,23 +101,26 @@ static int do_hook(int argc, char** argv) {
     return cmd_hook(opts);
 }
 
-static int do_build(int argc, char** argv) {
-    auto m = load_or_die();
+static BuildOpts parse_build_opts(int argc, char** argv) {
     BuildOpts opts;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg.rfind("--src=", 0) == 0) opts.set_src_dir(arg.substr(6));
-        else if (arg.rfind("--out=", 0) == 0) opts.set_out_dir(arg.substr(6));
-        else if (arg.rfind("--target=", 0) == 0) opts.set_target(arg.substr(9));
-        else if (arg.rfind("--std=", 0) == 0) opts.set_std_ver(arg.substr(6));
-        else if (arg == "--release") opts.set_release(true);
-        else if (arg == "--recursive") opts.set_recursive(true);
+        if (arg.rfind("--src=", 0) == 0) { opts.set_src_dir(arg.substr(6)); continue; }
+        if (arg.rfind("--out=", 0) == 0) { opts.set_out_dir(arg.substr(6)); continue; }
+        if (arg.rfind("--target=", 0) == 0) { opts.set_target(arg.substr(9)); continue; }
+        if (arg.rfind("--std=", 0) == 0) { opts.set_std_ver(arg.substr(6)); continue; }
+        if (arg == "--release") { opts.set_release(true); continue; }
+        if (arg == "--recursive") opts.set_recursive(true);
     }
-    return cmd_build(m, opts);
+    return opts;
+}
+
+static int do_build(int argc, char** argv) {
+    return cmd_build(load_or_die(), parse_build_opts(argc, argv));
 }
 
 int main(int argc, char** argv) {
-    cli::Parser parser;
+    Parser parser;
 
     parser.add_option({'h', "help",    "",     "Show this help",    false});
     parser.add_option({'V', "version", "",     "Show version",      false});
