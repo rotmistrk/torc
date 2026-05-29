@@ -6,10 +6,12 @@
 
 namespace torc::yaml {
 
-const Node* Node::get(std::string_view key) const {
-    if (!is_map()) return nullptr;
-    for (const auto& [k, v] : as_map()) {
-        if (k == key) return &v;
+const Node *Node::get(std::string_view key) const {
+    if (!is_map())
+        return nullptr;
+    for (const auto &[k, v] : as_map()) {
+        if (k == key)
+            return &v;
     }
     return nullptr;
 }
@@ -51,7 +53,8 @@ std::vector<Line> tokenize(std::string_view input) {
 
         auto content = raw.substr(static_cast<size_t>(indent));
         // Skip blank lines and comments
-        if (content.empty() || content[0] == '#') continue;
+        if (content.empty() || content[0] == '#')
+            continue;
 
         lines.push_back({indent, content, lineno});
     }
@@ -59,7 +62,7 @@ std::vector<Line> tokenize(std::string_view input) {
 }
 
 class Parser {
-public:
+  public:
     explicit Parser(std::vector<Line> lines) : lines_(std::move(lines)) {}
 
     ParseResult run() {
@@ -68,18 +71,20 @@ public:
         return result;
     }
 
-private:
+  private:
     std::vector<Line> lines_;
     size_t pos_ = 0;
 
     bool at_end() const { return pos_ >= lines_.size(); }
-    const Line& peek() const { return lines_[pos_]; }
+    const Line &peek() const { return lines_[pos_]; }
 
-    Node parse_node(int min_indent, std::vector<ParseError>& errors) {
-        if (at_end()) return Node{Scalar{}};
+    Node parse_node(int min_indent, std::vector<ParseError> &errors) {
+        if (at_end())
+            return Node{Scalar{}};
 
-        const auto& line = peek();
-        if (line.indent < min_indent) return Node{Scalar{}};
+        const auto &line = peek();
+        if (line.indent < min_indent)
+            return Node{Scalar{}};
 
         // List?
         if (line.content.starts_with("- ")) {
@@ -97,10 +102,9 @@ private:
         return Node{Scalar{std::string(line.content)}};
     }
 
-    Node parse_list(int base_indent, std::vector<ParseError>& errors) {
+    Node parse_list(int base_indent, std::vector<ParseError> &errors) {
         List list;
-        while (!at_end() && peek().indent == base_indent &&
-               peek().content.starts_with("- ")) {
+        while (!at_end() && peek().indent == base_indent && peek().content.starts_with("- ")) {
             auto item_content = peek().content.substr(2);
             ++pos_;
 
@@ -110,43 +114,39 @@ private:
                 Map m;
                 auto key = item_content.substr(0, colon);
                 auto val = item_content.substr(colon + 1);
-                while (!val.empty() && val[0] == ' ') val = val.substr(1);
+                while (!val.empty() && val[0] == ' ')
+                    val = val.substr(1);
 
                 if (val == "|") {
-                    m.emplace_back(std::string(key),
-                                   parse_block_scalar(base_indent + 4));
+                    m.emplace_back(std::string(key), parse_block_scalar(base_indent + 4));
                 } else if (val.empty() && !at_end() && peek().indent > base_indent) {
-                    m.emplace_back(std::string(key),
-                                   parse_node(peek().indent, errors));
+                    m.emplace_back(std::string(key), parse_node(peek().indent, errors));
                 } else {
-                    m.emplace_back(std::string(key),
-                                   Node{Scalar{std::string(val)}});
+                    m.emplace_back(std::string(key), Node{Scalar{std::string(val)}});
                 }
 
                 // Collect remaining keys at deeper indent
                 while (!at_end() && peek().indent > base_indent) {
-                    auto& nl = peek();
+                    auto &nl = peek();
                     auto nc = nl.content.find(':');
                     if (nc != std::string_view::npos) {
                         auto nk = nl.content.substr(0, nc);
                         auto nv = nl.content.substr(nc + 1);
-                        while (!nv.empty() && nv[0] == ' ') nv = nv.substr(1);
+                        while (!nv.empty() && nv[0] == ' ')
+                            nv = nv.substr(1);
 
                         if (nv == "|") {
                             ++pos_;
-                            m.emplace_back(std::string(nk),
-                                           parse_block_scalar(nl.indent + 2));
+                            m.emplace_back(std::string(nk), parse_block_scalar(nl.indent + 2));
                         } else if (nv.empty() && !at_end()) {
                             ++pos_;
                             if (!at_end() && peek().indent > nl.indent) {
-                                m.emplace_back(std::string(nk),
-                                               parse_node(peek().indent, errors));
+                                m.emplace_back(std::string(nk), parse_node(peek().indent, errors));
                             } else {
                                 m.emplace_back(std::string(nk), Node{Scalar{}});
                             }
                         } else {
-                            m.emplace_back(std::string(nk),
-                                           Node{Scalar{std::string(nv)}});
+                            m.emplace_back(std::string(nk), Node{Scalar{std::string(nv)}});
                             ++pos_;
                         }
                     } else {
@@ -164,30 +164,29 @@ private:
         return Node{std::move(list)};
     }
 
-    Node parse_map(int base_indent, std::vector<ParseError>& errors) {
+    Node parse_map(int base_indent, std::vector<ParseError> &errors) {
         Map map;
         while (!at_end() && peek().indent == base_indent) {
-            auto& line = peek();
+            auto &line = peek();
             auto colon = line.content.find(':');
-            if (colon == std::string_view::npos) break;
+            if (colon == std::string_view::npos)
+                break;
 
             auto key = line.content.substr(0, colon);
             auto rest = line.content.substr(colon + 1);
-            while (!rest.empty() && rest[0] == ' ') rest = rest.substr(1);
+            while (!rest.empty() && rest[0] == ' ')
+                rest = rest.substr(1);
 
             ++pos_;
 
             if (rest == "|") {
                 // Block scalar
-                map.emplace_back(std::string(key),
-                                 parse_block_scalar(base_indent + 2));
+                map.emplace_back(std::string(key), parse_block_scalar(base_indent + 2));
             } else if (rest.empty()) {
                 // Nested structure
-                map.emplace_back(std::string(key),
-                                 parse_node(base_indent + 2, errors));
+                map.emplace_back(std::string(key), parse_node(base_indent + 2, errors));
             } else {
-                map.emplace_back(std::string(key),
-                                 Node{Scalar{std::string(rest)}});
+                map.emplace_back(std::string(key), Node{Scalar{std::string(rest)}});
             }
         }
         return Node{std::move(map)};
@@ -196,7 +195,8 @@ private:
     Node parse_block_scalar(int min_indent) {
         std::string result;
         while (!at_end() && peek().indent >= min_indent) {
-            if (!result.empty()) result += '\n';
+            if (!result.empty())
+                result += '\n';
             result += std::string(peek().content);
             ++pos_;
         }

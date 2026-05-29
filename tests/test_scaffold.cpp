@@ -1,5 +1,5 @@
-#include "scaffold.hpp"
 #include "hook.hpp"
+#include "scaffold.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -10,14 +10,15 @@
 
 namespace fs = std::filesystem;
 
-#define ASSERT(cond) do { \
-    if (!(cond)) { \
-        std::fprintf(stderr, "FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond); \
-        std::exit(1); \
-    } \
-} while(0)
+#define ASSERT(cond)                                                                               \
+    do {                                                                                           \
+        if (!(cond)) {                                                                             \
+            std::fprintf(stderr, "FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond);                  \
+            std::exit(1);                                                                          \
+        }                                                                                          \
+    } while (0)
 
-static std::string read_file(const std::string& path) {
+static std::string read_file(const std::string &path) {
     std::ifstream f(path);
     std::ostringstream ss;
     ss << f.rdbuf();
@@ -65,7 +66,10 @@ static void test_init_no_overwrite() {
     fs::remove_all(dir);
     fs::create_directories(dir);
 
-    { std::ofstream f(dir + "/Makefile"); f << "existing\n"; }
+    {
+        std::ofstream f(dir + "/Makefile");
+        f << "existing\n";
+    }
 
     torc::InitOpts opts;
     opts.set_dir(dir);
@@ -82,7 +86,10 @@ static void test_init_force() {
     fs::remove_all(dir);
     fs::create_directories(dir);
 
-    { std::ofstream f(dir + "/Makefile"); f << "old\n"; }
+    {
+        std::ofstream f(dir + "/Makefile");
+        f << "old\n";
+    }
 
     torc::InitOpts opts;
     opts.set_dir(dir);
@@ -94,7 +101,7 @@ static void test_init_force() {
     auto content = read_file(dir + "/Makefile");
     ASSERT(content.find("myapp") != std::string::npos);
     bool found_bak = false;
-    for (auto& e : fs::directory_iterator(dir)) {
+    for (auto &e : fs::directory_iterator(dir)) {
         if (e.path().string().find(".bak") != std::string::npos) {
             found_bak = true;
             ASSERT(read_file(e.path().string()) == "old\n");
@@ -111,7 +118,10 @@ static void test_hook_insert() {
     fs::create_directories(dir);
 
     std::string mf = dir + "/Makefile";
-    { std::ofstream f(mf); f << "CXX = g++\n\nall:\n\techo hi\n"; }
+    {
+        std::ofstream f(mf);
+        f << "CXX = g++\n\nall:\n\techo hi\n";
+    }
 
     torc::HookOpts opts;
     opts.set_makefile(mf);

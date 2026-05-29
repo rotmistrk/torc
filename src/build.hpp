@@ -2,6 +2,7 @@
 // torc — build command: direct compile without Makefile
 
 #include "manifest.hpp"
+
 #include <string>
 
 namespace torc {
@@ -10,13 +11,13 @@ class BuildOpts {
   public:
     BuildOpts() = default;
 
-    const std::string& src_dir() const { return src_dir_; }
-    const std::string& out_dir() const { return out_dir_; }
-    const std::string& target() const { return target_; }
-    const std::string& std_ver() const { return std_ver_; }
-    const std::string& toolchain() const { return toolchain_; }
-    const std::string& cxx() const { return cxx_; }
-    const std::string& extra_cxxflags() const { return extra_cxxflags_; }
+    const std::string &src_dir() const { return src_dir_; }
+    const std::string &out_dir() const { return out_dir_; }
+    const std::string &target() const { return target_; }
+    const std::string &std_ver() const { return std_ver_; }
+    const std::string &toolchain() const { return toolchain_; }
+    const std::string &cxx() const { return cxx_; }
+    const std::string &extra_cxxflags() const { return extra_cxxflags_; }
     bool release() const { return release_; }
     bool recursive() const { return recursive_; }
 
@@ -43,6 +44,6 @@ class BuildOpts {
 };
 
 // Compile and link sources directly. Returns exit code.
-int cmd_build(const Manifest& m, const BuildOpts& opts);
+int cmd_build(const Manifest &m, const BuildOpts &opts);
 
 } // namespace torc

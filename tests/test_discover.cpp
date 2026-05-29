@@ -37,8 +37,7 @@ static void test_script_discover() {
           << "  build: make\n"
           << "EOF\n";
     }
-    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read
-                    | fs::perms::owner_write);
+    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
     torc::Package pkg;
     pkg.set_name("foo");
@@ -67,8 +66,7 @@ static void test_invalid_output() {
         std::ofstream f(script);
         f << "#!/bin/sh\necho 'not: [valid: yaml'\n";
     }
-    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read
-                    | fs::perms::owner_write);
+    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
     torc::Package pkg;
     pkg.set_name("foo");

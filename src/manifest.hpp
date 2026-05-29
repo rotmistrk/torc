@@ -9,21 +9,19 @@ namespace torc {
 class Package {
   public:
     Package() = default;
-    Package(std::string name, std::string version, std::string source,
-            std::string sha256, std::string build, std::string discover,
-            std::string lib_name)
-        : name_(std::move(name)), version_(std::move(version)),
-          source_(std::move(source)), sha256_(std::move(sha256)),
-          build_(std::move(build)), discover_(std::move(discover)),
+    Package(std::string name, std::string version, std::string source, std::string sha256,
+            std::string build, std::string discover, std::string lib_name)
+        : name_(std::move(name)), version_(std::move(version)), source_(std::move(source)),
+          sha256_(std::move(sha256)), build_(std::move(build)), discover_(std::move(discover)),
           lib_name_(std::move(lib_name)) {}
 
-    const std::string& name() const { return name_; }
-    const std::string& version() const { return version_; }
-    const std::string& source() const { return source_; }
-    const std::string& sha256() const { return sha256_; }
-    const std::string& build() const { return build_; }
-    const std::string& discover() const { return discover_; }
-    const std::string& lib_name() const { return lib_name_; }
+    const std::string &name() const { return name_; }
+    const std::string &version() const { return version_; }
+    const std::string &source() const { return source_; }
+    const std::string &sha256() const { return sha256_; }
+    const std::string &build() const { return build_; }
+    const std::string &discover() const { return discover_; }
+    const std::string &lib_name() const { return lib_name_; }
 
     void set_name(std::string v) { name_ = std::move(v); }
     void set_version(std::string v) { version_ = std::move(v); }
@@ -47,10 +45,10 @@ class Toolchain {
   public:
     Toolchain() = default;
 
-    const std::string& name() const { return name_; }
-    const std::string& cxx() const { return cxx_; }
-    const std::string& cxxflags() const { return cxxflags_; }
-    const std::string& out() const { return out_; }
+    const std::string &name() const { return name_; }
+    const std::string &cxx() const { return cxx_; }
+    const std::string &cxxflags() const { return cxxflags_; }
+    const std::string &out() const { return out_; }
 
     void set_name(std::string v) { name_ = std::move(v); }
     void set_cxx(std::string v) { cxx_ = std::move(v); }
@@ -68,12 +66,12 @@ class Manifest {
   public:
     Manifest() = default;
 
-    const std::string& depdir() const { return depdir_; }
+    const std::string &depdir() const { return depdir_; }
     int parallel() const { return parallel_; }
-    const std::vector<Package>& packages() const { return packages_; }
-    const std::vector<std::string>& checkers() const { return checkers_; }
-    const std::string& ldlibs() const { return ldlibs_; }
-    const std::vector<Toolchain>& toolchains() const { return toolchains_; }
+    const std::vector<Package> &packages() const { return packages_; }
+    const std::vector<std::string> &checkers() const { return checkers_; }
+    const std::string &ldlibs() const { return ldlibs_; }
+    const std::vector<Toolchain> &toolchains() const { return toolchains_; }
 
     void set_depdir(std::string v) { depdir_ = std::move(v); }
     void set_parallel(int v) { parallel_ = v < 1 ? 1 : v; }
@@ -82,9 +80,10 @@ class Manifest {
     void set_ldlibs(std::string v) { ldlibs_ = std::move(v); }
     void add_toolchain(Toolchain v) { toolchains_.push_back(std::move(v)); }
 
-    const Toolchain* find_toolchain(const std::string& name) const {
-        for (const auto& tc : toolchains_)
-            if (tc.name() == name) return &tc;
+    const Toolchain *find_toolchain(const std::string &name) const {
+        for (const auto &tc : toolchains_)
+            if (tc.name() == name)
+                return &tc;
         return nullptr;
     }
 
@@ -98,9 +97,9 @@ class Manifest {
 };
 
 // Parse manifest from file. Returns empty manifest + sets err on failure.
-Manifest load_manifest(const std::string& path, std::string& err);
+Manifest load_manifest(const std::string &path, std::string &err);
 
 // Resolve ~ and env vars in depdir
-std::string expand_path(const std::string& path);
+std::string expand_path(const std::string &path);
 
 } // namespace torc

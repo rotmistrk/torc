@@ -1,4 +1,5 @@
 #include "install.hpp"
+
 #include "diag.hpp"
 #include "discover.hpp"
 #include "exitcodes.hpp"
@@ -14,10 +15,8 @@ namespace torc {
 
 namespace fs = std::filesystem;
 
-static std::string substitute_vars(std::string cmd, const std::string& prefix,
-                                   int jobs) {
-    auto replace = [](std::string& s, const std::string& from,
-                      const std::string& to) {
+static std::string substitute_vars(std::string cmd, const std::string &prefix, int jobs) {
+    auto replace = [](std::string &s, const std::string &from, const std::string &to) {
         size_t pos = 0;
         while ((pos = s.find(from, pos)) != std::string::npos) {
             s.replace(pos, from.size(), to);
@@ -29,7 +28,7 @@ static std::string substitute_vars(std::string cmd, const std::string& prefix,
     return cmd;
 }
 
-static int fetch_and_verify(const Package& pkg, const std::string& archive) {
+static int fetch_and_verify(const Package &pkg, const std::string &archive) {
     std::string err;
     if (!fetch::download(pkg.source(), archive, err)) {
         diag::error(pkg.name(), err);
@@ -44,7 +43,7 @@ static int fetch_and_verify(const Package& pkg, const std::string& archive) {
     return EX_OK;
 }
 
-int install_package(const Package& pkg, const std::string& depdir, int jobs) {
+int install_package(const Package &pkg, const std::string &depdir, int jobs) {
     std::string prefix = depdir + "/" + pkg.name() + "/" + pkg.version();
     std::string tmp_dir = depdir + "/.tmp/" + pkg.name() + "-" + pkg.version();
     std::string archive = tmp_dir + "/source.tar.gz";
@@ -58,7 +57,8 @@ int install_package(const Package& pkg, const std::string& depdir, int jobs) {
     diag::info("installing " + pkg.name() + "/" + pkg.version());
 
     int rc = fetch_and_verify(pkg, archive);
-    if (rc != EX_OK) return rc;
+    if (rc != EX_OK)
+        return rc;
 
     std::string err;
     if (!fetch::extract_tarball(archive, src_dir, err)) {
@@ -79,7 +79,7 @@ int install_package(const Package& pkg, const std::string& depdir, int jobs) {
     return 0;
 }
 
-int cmd_install(const Manifest& m, bool force) {
+int cmd_install(const Manifest &m, bool force) {
     std::string depdir = expand_path(m.depdir());
 
     std::error_code ec;
@@ -90,7 +90,7 @@ int cmd_install(const Manifest& m, bool force) {
     }
 
     std::vector<std::pair<std::string, std::function<int()>>> tasks;
-    for (const auto& pkg : m.packages()) {
+    for (const auto &pkg : m.packages()) {
         if (force) {
             std::string prefix = depdir + "/" + pkg.name() + "/" + pkg.version();
             fs::remove_all(prefix, ec);
@@ -101,8 +101,9 @@ int cmd_install(const Manifest& m, bool force) {
     }
 
     int failures = 0;
-    run_parallel(tasks, m.parallel(), [&](const std::string& /*name*/, int rc) {
-        if (rc != 0) ++failures;
+    run_parallel(tasks, m.parallel(), [&](const std::string & /*name*/, int rc) {
+        if (rc != 0)
+            ++failures;
     });
     if (failures > 0) {
         diag::error("install", std::to_string(failures) + " package(s) failed");
@@ -111,15 +112,17 @@ int cmd_install(const Manifest& m, bool force) {
 
     // Transitive dependency discovery
     std::set<std::string> installed;
-    for (const auto& pkg : m.packages())
+    for (const auto &pkg : m.packages())
         installed.insert(pkg.name() + "/" + pkg.version());
 
-    for (const auto& pkg : m.packages()) {
-        if (pkg.discover().empty()) continue;
+    for (const auto &pkg : m.packages()) {
+        if (pkg.discover().empty())
+            continue;
         std::string prefix = depdir + "/" + pkg.name() + "/" + pkg.version();
         discover_deps(pkg, prefix, [&](Package dep) {
             std::string key = dep.name() + "/" + dep.version();
-            if (installed.count(key)) return;
+            if (installed.count(key))
+                return;
             installed.insert(key);
             diag::info("transitive: " + key);
             install_package(dep, depdir, m.parallel());

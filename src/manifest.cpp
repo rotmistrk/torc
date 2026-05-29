@@ -1,4 +1,5 @@
 #include "manifest.hpp"
+
 #include "yaml.hpp"
 
 #include <cstdlib>
@@ -9,12 +10,13 @@
 
 namespace torc {
 
-std::string expand_path(const std::string& path) {
-    if (path.empty()) return path;
+std::string expand_path(const std::string &path) {
+    if (path.empty())
+        return path;
     if (path[0] == '~') {
-        const char* home = std::getenv("HOME");
+        const char *home = std::getenv("HOME");
         if (!home) {
-            auto* pw = getpwuid(getuid());
+            auto *pw = getpwuid(getuid());
             home = pw ? pw->pw_dir : "/tmp";
         }
         return std::string(home) + path.substr(1);
@@ -23,14 +25,14 @@ std::string expand_path(const std::string& path) {
 }
 
 static std::string default_depdir() {
-    const char* xdg = std::getenv("XDG_DATA_HOME");
+    const char *xdg = std::getenv("XDG_DATA_HOME");
     if (xdg && xdg[0] != '\0') {
         return std::string(xdg) + "/torc";
     }
     return expand_path("~/.local/share/torc");
 }
 
-Manifest load_manifest(const std::string& path, std::string& err) {
+Manifest load_manifest(const std::string &path, std::string &err) {
     Manifest m;
     m.set_depdir(default_depdir());
 
@@ -45,66 +47,82 @@ Manifest load_manifest(const std::string& path, std::string& err) {
     auto result = yaml::parse(ss.str());
 
     if (!result.ok()) {
-        err = "parse error at line " +
-              std::to_string(result.errors[0].line) + ": " +
+        err = "parse error at line " + std::to_string(result.errors[0].line) + ": " +
               result.errors[0].message;
         return m;
     }
 
-    const auto& root = result.root;
+    const auto &root = result.root;
     if (!root.is_map()) {
         err = "manifest root must be a map";
         return m;
     }
 
-    if (auto* d = root.get("depdir")) {
-        if (d->is_scalar()) m.set_depdir(expand_path(d->as_scalar()));
+    if (auto *d = root.get("depdir")) {
+        if (d->is_scalar())
+            m.set_depdir(expand_path(d->as_scalar()));
     }
-    if (auto* p = root.get("parallel")) {
+    if (auto *p = root.get("parallel")) {
         if (p->is_scalar()) {
             m.set_parallel(std::atoi(p->as_scalar().c_str()));
         }
     }
 
-    if (auto* pkgs = root.get("packages")) {
+    if (auto *pkgs = root.get("packages")) {
         if (pkgs->is_list()) {
-            for (const auto& item : pkgs->as_list()) {
-                if (!item.is_map()) continue;
+            for (const auto &item : pkgs->as_list()) {
+                if (!item.is_map())
+                    continue;
                 Package pkg;
-                if (auto* n = item.get("name"))     pkg.set_name(n->as_scalar());
-                if (auto* v = item.get("version"))  pkg.set_version(v->as_scalar());
-                if (auto* s = item.get("source"))   pkg.set_source(s->as_scalar());
-                if (auto* c = item.get("sha256"))   pkg.set_sha256(c->as_scalar());
-                if (auto* b = item.get("build"))    pkg.set_build(b->as_scalar());
-                if (auto* d = item.get("discover")) pkg.set_discover(d->as_scalar());
-                if (auto* l = item.get("lib"))      pkg.set_lib_name(l->as_scalar());
-                if (pkg.lib_name().empty()) pkg.set_lib_name(pkg.name());
-                if (!pkg.name().empty()) m.add_package(std::move(pkg));
+                if (auto *n = item.get("name"))
+                    pkg.set_name(n->as_scalar());
+                if (auto *v = item.get("version"))
+                    pkg.set_version(v->as_scalar());
+                if (auto *s = item.get("source"))
+                    pkg.set_source(s->as_scalar());
+                if (auto *c = item.get("sha256"))
+                    pkg.set_sha256(c->as_scalar());
+                if (auto *b = item.get("build"))
+                    pkg.set_build(b->as_scalar());
+                if (auto *d = item.get("discover"))
+                    pkg.set_discover(d->as_scalar());
+                if (auto *l = item.get("lib"))
+                    pkg.set_lib_name(l->as_scalar());
+                if (pkg.lib_name().empty())
+                    pkg.set_lib_name(pkg.name());
+                if (!pkg.name().empty())
+                    m.add_package(std::move(pkg));
             }
         }
     }
 
-    if (auto* chk = root.get("checkers")) {
+    if (auto *chk = root.get("checkers")) {
         if (chk->is_list()) {
-            for (const auto& item : chk->as_list()) {
-                if (item.is_scalar()) m.add_checker(item.as_scalar());
+            for (const auto &item : chk->as_list()) {
+                if (item.is_scalar())
+                    m.add_checker(item.as_scalar());
             }
         }
     }
 
-    if (auto* libs = root.get("ldlibs")) {
-        if (libs->is_scalar()) m.set_ldlibs(libs->as_scalar());
+    if (auto *libs = root.get("ldlibs")) {
+        if (libs->is_scalar())
+            m.set_ldlibs(libs->as_scalar());
     }
 
-    if (auto* tcs = root.get("toolchains")) {
+    if (auto *tcs = root.get("toolchains")) {
         if (tcs->is_map()) {
-            for (const auto& [key, val] : tcs->as_map()) {
-                if (!val.is_map()) continue;
+            for (const auto &[key, val] : tcs->as_map()) {
+                if (!val.is_map())
+                    continue;
                 Toolchain tc;
                 tc.set_name(key);
-                if (auto* cx = val.get("cxx")) tc.set_cxx(cx->as_scalar());
-                if (auto* cf = val.get("cxxflags")) tc.set_cxxflags(cf->as_scalar());
-                if (auto* od = val.get("out")) tc.set_out(od->as_scalar());
+                if (auto *cx = val.get("cxx"))
+                    tc.set_cxx(cx->as_scalar());
+                if (auto *cf = val.get("cxxflags"))
+                    tc.set_cxxflags(cf->as_scalar());
+                if (auto *od = val.get("out"))
+                    tc.set_out(od->as_scalar());
                 m.add_toolchain(std::move(tc));
             }
         }

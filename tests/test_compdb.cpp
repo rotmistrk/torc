@@ -9,13 +9,13 @@
 
 namespace fs = std::filesystem;
 
-static void write_file(const std::string& path, const std::string& content) {
+static void write_file(const std::string &path, const std::string &content) {
     fs::create_directories(fs::path(path).parent_path());
     std::ofstream out(path);
     out << content;
 }
 
-static std::string read_file(const std::string& path) {
+static std::string read_file(const std::string &path) {
     std::ifstream in(path);
     std::ostringstream ss;
     ss << in.rdbuf();

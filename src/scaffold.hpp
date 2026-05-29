@@ -9,7 +9,7 @@ class NewOpts {
   public:
     NewOpts() = default;
 
-    const std::string& name() const { return name_; }
+    const std::string &name() const { return name_; }
     bool lib() const { return lib_; }
     bool no_git() const { return no_git_; }
 
@@ -27,8 +27,8 @@ class InitOpts {
   public:
     InitOpts() = default;
 
-    const std::string& dir() const { return dir_; }
-    const std::string& name() const { return name_; }
+    const std::string &dir() const { return dir_; }
+    const std::string &name() const { return name_; }
     bool force() const { return force_; }
 
     void set_dir(std::string v) { dir_ = std::move(v); }
@@ -42,9 +42,9 @@ class InitOpts {
 };
 
 // Create a new project directory with full scaffold
-int cmd_new(const NewOpts& opts);
+int cmd_new(const NewOpts &opts);
 
 // Generate a Makefile in an existing directory
-int cmd_init(const InitOpts& opts);
+int cmd_init(const InitOpts &opts);
 
 } // namespace torc

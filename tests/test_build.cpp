@@ -8,7 +8,7 @@
 
 namespace fs = std::filesystem;
 
-static void write_file(const std::string& path, const std::string& content) {
+static void write_file(const std::string &path, const std::string &content) {
     fs::create_directories(fs::path(path).parent_path());
     std::ofstream out(path);
     out << content;

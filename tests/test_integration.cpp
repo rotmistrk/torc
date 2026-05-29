@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-static std::string read_file(const std::string& path) {
+static std::string read_file(const std::string &path) {
     std::ifstream in(path);
     std::ostringstream ss;
     ss << in.rdbuf();

@@ -1,6 +1,6 @@
-#include "update.hpp"
 #include "checker.hpp"
 #include "manifest.hpp"
+#include "update.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-static std::string read_file(const std::string& path) {
+static std::string read_file(const std::string &path) {
     std::ifstream in(path);
     std::ostringstream ss;
     ss << in.rdbuf();
@@ -23,7 +23,10 @@ static void test_empty_packages() {
     fs::create_directories(tmp);
 
     std::string mf = (tmp / "torc.yaml").string();
-    { std::ofstream f(mf); f << "depdir: /tmp/x\npackages: []\n"; }
+    {
+        std::ofstream f(mf);
+        f << "depdir: /tmp/x\npackages: []\n";
+    }
 
     auto prev = fs::current_path();
     fs::current_path(tmp);
@@ -58,8 +61,7 @@ static void test_non_github_url() {
 
     torc::Manifest m;
     m.set_depdir("/tmp/x");
-    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz",
-                    "", "", "", "foo");
+    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz", "", "", "", "foo");
     m.add_package(std::move(p));
 
     torc::UpdateOpts opts;
@@ -90,8 +92,7 @@ static void test_apply_rewrites() {
 
     torc::Manifest m;
     m.set_depdir("/tmp/x");
-    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz",
-                    "", "", "", "foo");
+    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz", "", "", "", "foo");
     m.add_package(std::move(p));
 
     torc::UpdateOpts opts;
@@ -122,8 +123,7 @@ static void test_script_checker() {
           << "  --latest) echo '2.0.0' ;;\n"
           << "esac\n";
     }
-    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read
-                    | fs::perms::owner_write);
+    fs::permissions(script, fs::perms::owner_exec | fs::perms::owner_read | fs::perms::owner_write);
 
     std::string mf = (tmp / "torc.yaml").string();
     {
@@ -142,8 +142,7 @@ static void test_script_checker() {
     torc::Manifest m;
     m.set_depdir("/tmp/x");
     m.add_checker(script);
-    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz",
-                    "", "", "", "foo");
+    torc::Package p("foo", "1.0.0", "https://example.com/foo-1.0.0.tar.gz", "", "", "", "foo");
     m.add_package(std::move(p));
 
     torc::UpdateOpts opts;

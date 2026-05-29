@@ -56,9 +56,8 @@ static void test_topo_order() {
     local.add_lib(std::move(b));
 
     std::vector<std::string> order;
-    torc::for_each_lib_ordered(local, [&](const torc::LocalLib& lib) {
-        order.push_back(lib.name());
-    });
+    torc::for_each_lib_ordered(local,
+                               [&](const torc::LocalLib &lib) { order.push_back(lib.name()); });
     assert(order.size() == 2);
     assert(order[0] == "b"); // leaf first
     assert(order[1] == "a");

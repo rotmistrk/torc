@@ -14,25 +14,23 @@ static void test_simple_map() {
 }
 
 static void test_nested_map() {
-    auto r = torc::yaml::parse(
-        "top:\n"
-        "  inner: value\n"
-        "  other: 42\n");
+    auto r = torc::yaml::parse("top:\n"
+                               "  inner: value\n"
+                               "  other: 42\n");
     assert(r.ok());
-    auto* top = r.root.get("top");
+    auto *top = r.root.get("top");
     assert(top && top->is_map());
     assert(top->get("inner")->as_scalar() == "value");
     assert(top->get("other")->as_scalar() == "42");
 }
 
 static void test_list() {
-    auto r = torc::yaml::parse(
-        "items:\n"
-        "  - alpha\n"
-        "  - beta\n"
-        "  - gamma\n");
+    auto r = torc::yaml::parse("items:\n"
+                               "  - alpha\n"
+                               "  - beta\n"
+                               "  - gamma\n");
     assert(r.ok());
-    auto* items = r.root.get("items");
+    auto *items = r.root.get("items");
     assert(items && items->is_list());
     assert(items->as_list().size() == 3);
     assert(items->as_list()[0].as_scalar() == "alpha");
@@ -40,14 +38,13 @@ static void test_list() {
 }
 
 static void test_list_of_maps() {
-    auto r = torc::yaml::parse(
-        "packages:\n"
-        "  - name: fmt\n"
-        "    version: 10.1.1\n"
-        "  - name: spdlog\n"
-        "    version: 1.12.0\n");
+    auto r = torc::yaml::parse("packages:\n"
+                               "  - name: fmt\n"
+                               "    version: 10.1.1\n"
+                               "  - name: spdlog\n"
+                               "    version: 1.12.0\n");
     assert(r.ok());
-    auto* pkgs = r.root.get("packages");
+    auto *pkgs = r.root.get("packages");
     assert(pkgs && pkgs->is_list());
     assert(pkgs->as_list().size() == 2);
     assert(pkgs->as_list()[0].get("name")->as_scalar() == "fmt");
@@ -55,22 +52,20 @@ static void test_list_of_maps() {
 }
 
 static void test_block_scalar() {
-    auto r = torc::yaml::parse(
-        "script: |\n"
-        "  line one\n"
-        "  line two\n");
+    auto r = torc::yaml::parse("script: |\n"
+                               "  line one\n"
+                               "  line two\n");
     assert(r.ok());
-    auto* s = r.root.get("script");
+    auto *s = r.root.get("script");
     assert(s && s->is_scalar());
     assert(s->as_scalar() == "line one\nline two");
 }
 
 static void test_comments_ignored() {
-    auto r = torc::yaml::parse(
-        "# comment\n"
-        "key: value\n"
-        "# another comment\n"
-        "key2: value2\n");
+    auto r = torc::yaml::parse("# comment\n"
+                               "key: value\n"
+                               "# another comment\n"
+                               "key2: value2\n");
     assert(r.ok());
     assert(r.root.get("key")->as_scalar() == "value");
     assert(r.root.get("key2")->as_scalar() == "value2");

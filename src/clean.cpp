@@ -1,4 +1,5 @@
 #include "clean.hpp"
+
 #include "diag.hpp"
 
 #include <filesystem>
@@ -8,22 +9,25 @@ namespace torc {
 
 namespace fs = std::filesystem;
 
-void for_each_stale(const Manifest& m, const StaleVisitor& visitor) {
+void for_each_stale(const Manifest &m, const StaleVisitor &visitor) {
     std::string depdir = expand_path(m.depdir());
 
     std::set<std::string> expected;
-    for (const auto& pkg : m.packages())
+    for (const auto &pkg : m.packages())
         expected.insert(pkg.name() + "/" + pkg.version());
 
     std::error_code ec;
-    if (!fs::exists(depdir, ec)) return;
+    if (!fs::exists(depdir, ec))
+        return;
 
-    for (const auto& pkg_entry : fs::directory_iterator(depdir, ec)) {
-        if (!pkg_entry.is_directory()) continue;
+    for (const auto &pkg_entry : fs::directory_iterator(depdir, ec)) {
+        if (!pkg_entry.is_directory())
+            continue;
         auto pkg_name = pkg_entry.path().filename().string();
 
-        for (const auto& ver_entry : fs::directory_iterator(pkg_entry.path(), ec)) {
-            if (!ver_entry.is_directory()) continue;
+        for (const auto &ver_entry : fs::directory_iterator(pkg_entry.path(), ec)) {
+            if (!ver_entry.is_directory())
+                continue;
             auto ver_name = ver_entry.path().filename().string();
 
             if (expected.find(pkg_name + "/" + ver_name) == expected.end())
@@ -32,7 +36,7 @@ void for_each_stale(const Manifest& m, const StaleVisitor& visitor) {
     }
 }
 
-bool remove_stale(const StaleEntry& entry) {
+bool remove_stale(const StaleEntry &entry) {
     std::error_code ec;
     std::filesystem::remove_all(entry.path(), ec);
     if (ec) {

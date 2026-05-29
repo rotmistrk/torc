@@ -2,6 +2,7 @@
 // torc — check for newer package versions
 
 #include "manifest.hpp"
+
 #include <string>
 
 namespace torc {
@@ -18,7 +19,6 @@ class UpdateOpts {
 };
 
 // Check for updates. Returns exit code.
-int cmd_update(const Manifest& m, const UpdateOpts& opts,
-               const std::string& manifest_path);
+int cmd_update(const Manifest &m, const UpdateOpts &opts, const std::string &manifest_path);
 
 } // namespace torc
