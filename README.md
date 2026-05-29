@@ -112,6 +112,41 @@ local:
 
 `torc generate` emits `localdep.mak` with build order, flags, and dependency rules.
 
+## Cross-Compilation
+
+Define toolchains in `torc.yaml`:
+
+```yaml
+toolchains:
+  aarch64:
+    cxx: aarch64-linux-gnu-g++
+    cxxflags: --sysroot=/usr/aarch64-linux-gnu
+    out: build-aarch64
+  wasm:
+    cxx: em++
+    cxxflags: -s WASM=1
+    out: build-wasm
+```
+
+Then build with:
+```bash
+torc build --toolchain=aarch64 --target=myapp
+torc build --cxx=arm-none-eabi-g++ --out=build-arm   # inline override
+```
+
+## Version Checking
+
+`torc update` checks GitHub for newer releases. Add custom checkers for other sources:
+
+```yaml
+checkers:
+  - /path/to/my-gitlab-checker
+```
+
+Checker protocol:
+- `my-checker --can-check <url>` → exit 0 if it handles this URL
+- `my-checker --latest <url>` → print latest version to stdout
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
