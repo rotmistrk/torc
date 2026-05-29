@@ -1,4 +1,5 @@
 depdir: ~/.local/share/torc
 parallel: 4
+ldlibs: -lpthread
 
 packages: []

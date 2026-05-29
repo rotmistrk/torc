@@ -61,14 +61,19 @@ packages:
 
 ## Building torc
 
+Bootstrap (first time):
 ```bash
 make setup    # enable pre-commit hook
-make all      # compile
+make all      # compile with Make
 make test     # run tests
-make check    # fmt + lint + compile + test
 ```
 
-Requires: g++ (C++20), clang-format, clang-tidy, GNU Make.
+After bootstrap, torc manages itself:
+```bash
+./build/torc build --target=torc --release
+```
+
+Requires: g++ (C++20), GNU Make (bootstrap only).
 
 ## Install
 

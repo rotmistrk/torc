@@ -92,6 +92,10 @@ Manifest load_manifest(const std::string& path, std::string& err) {
         }
     }
 
+    if (auto* libs = root.get("ldlibs")) {
+        if (libs->is_scalar()) m.set_ldlibs(libs->as_scalar());
+    }
+
     return m;
 }
 

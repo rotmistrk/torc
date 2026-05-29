@@ -71,6 +71,7 @@ static std::string build_ldflags(const Manifest& m) {
 static std::string build_libs(const Manifest& m) {
     std::string libs;
     for (const auto& pkg : m.packages()) libs += " -l" + pkg.lib_name();
+    if (!m.ldlibs().empty()) libs += " " + m.ldlibs();
     return libs;
 }
 
